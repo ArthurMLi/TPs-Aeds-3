@@ -25,11 +25,11 @@ public class Usuario implements InterfaceRegistro {
 
     public Usuario(int id, String nome, String email, String hashSenha, String perguntaSecreta, String hashRespostaSecreta) {
         this.id = id;
-        this.nome = (nome != null) ? nome : "";
-        this.email = (email != null) ? email.trim() : "";
-        this.hashSenha = (hashSenha != null) ? hashSenha : "";
-        this.perguntaSecreta = (perguntaSecreta != null) ? perguntaSecreta : "";
-        this.hashRespostaSecreta = (hashRespostaSecreta != null) ? hashRespostaSecreta : "";
+        this.nome = nome;
+        this.email = email;
+        this.hashSenha = hashSenha;
+        this.perguntaSecreta = perguntaSecreta;
+        this.hashRespostaSecreta = hashRespostaSecreta;
     }
 
     @Override
@@ -55,7 +55,7 @@ public class Usuario implements InterfaceRegistro {
     }
 
     public void setNome(String nome) {
-        this.nome = (nome != null) ? nome : "";
+        this.nome = nome;
     }
 
     public String getEmail() {
@@ -63,7 +63,7 @@ public class Usuario implements InterfaceRegistro {
     }
 
     public void setEmail(String email) {
-        this.email = (email != null) ? email.trim() : "";
+        this.email = email;
     }
 
     public String getHashSenha() {
@@ -71,7 +71,7 @@ public class Usuario implements InterfaceRegistro {
     }
 
     public void setHashSenha(String hashSenha) {
-        this.hashSenha = (hashSenha != null) ? hashSenha : "";
+        this.hashSenha = hashSenha;
     }
 
     public String getPerguntaSecreta() {
@@ -79,7 +79,7 @@ public class Usuario implements InterfaceRegistro {
     }
 
     public void setPerguntaSecreta(String perguntaSecreta) {
-        this.perguntaSecreta = (perguntaSecreta != null) ? perguntaSecreta : "";
+        this.perguntaSecreta = perguntaSecreta;
     }
 
     public String getHashRespostaSecreta() {
@@ -87,7 +87,7 @@ public class Usuario implements InterfaceRegistro {
     }
 
     public void setHashRespostaSecreta(String hashRespostaSecreta) {
-        this.hashRespostaSecreta = (hashRespostaSecreta != null) ? hashRespostaSecreta : "";
+        this.hashRespostaSecreta = hashRespostaSecreta;
     }
 
     @Override

@@ -1,3 +1,5 @@
+package repository;
+
 import aed3.Arquivo;
 import entities.Usuario;
 import java.nio.charset.StandardCharsets;
@@ -161,6 +163,8 @@ public class CrudUsuario {
         return !resposta.isEmpty() && (resposta.charAt(0) == 'S' || resposta.charAt(0) == 's');
     }
 
+
+    // Alguem por favor cria uma classe de criptografia migra essa funcao pra la
     private String gerarHash(String texto) throws Exception {
         byte[] hash = MessageDigest.getInstance("SHA-256")
                 .digest(texto.getBytes(StandardCharsets.UTF_8));
