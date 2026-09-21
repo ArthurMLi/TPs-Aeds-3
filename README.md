@@ -32,10 +32,10 @@ Principais recursos:
 ![Tela de login](Imagens/LOGIN.JPG)
 
 ### Tela 2: Menu principal com usuario logado
-![Menu principal](Imagens/MENU_PRINCI.JPG)
+![Menu principal](Imagens/MENU_PRINCIPAL.JPG)
 
 ### Tela 3: Listagem de perguntas do usuario
-![Listagem de perguntas](Imagens/LISTA-PERGUN.JPG)
+![Listagem de perguntas](Imagens/LISTA-PERGUNTAS.JPG)
 
 ### Tela 4: Pergunta marcada como arquivada
 ![Pergunta arquivada](Imagens/ARQUVADA.JPG)
