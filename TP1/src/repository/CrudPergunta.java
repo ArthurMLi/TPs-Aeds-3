@@ -2,13 +2,24 @@ package repository;
 
 import entities.Pergunta;
 import files.ArquivoPergunta;
+import files.ArquivoUsuario;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+
+/**
+ * Camada de controle da entidade Pergunta.
+ *
+ * Como o CrudUsuario, nao faz entrada nem saida de dados: devolve null quando a
+ * operacao deu certo e uma mensagem de erro quando alguma regra barrou.
+ */
 public class CrudPergunta {
 
-    private ArquivoPergunta arqPerguntas;
+    private final ArquivoPergunta arqPerguntas;
 
     public CrudPergunta() throws Exception {
-        arqPerguntas = new ArquivoPergunta();
+        this.arqPerguntas = new ArquivoPergunta();
     }
 
     public CrudPergunta(ArquivoPergunta arqPerguntas) {
@@ -19,53 +30,48 @@ public class CrudPergunta {
         return arqPerguntas;
     }
 
-    public String criar(Pergunta pergunta) {
-        if (pergunta == null) {
-            return "Pergunta nao pode ser nula.";
+    /**
+     * Liga o arquivo de usuarios para que a inclusao valide a integridade
+     * referencial: so se cria pergunta para um idUsuario que exista de fato.
+     */
+    public void setArquivoUsuario(ArquivoUsuario arqUsuarios) {
+        arqPerguntas.setArquivoUsuario(arqUsuarios);
+    }
+
+    // ------------------------------------------------------------------
+    // Inclusao
+    // ------------------------------------------------------------------
+
+    /**
+     * Inclui uma pergunta. O usuario informa apenas o texto e as palavras-chave;
+     * o idUsuario vem de quem esta logado, as datas de criacao e alteracao vem
+     * do relogio, a nota comeca em zero e a pergunta nasce ativa.
+     */
+    public String incluir(int idUsuario, String texto, String palavrasChave) {
+        if (idUsuario <= 0) {
+            return "Usuário inválido.";
         }
-        if (pergunta.getIdUsuario() <= 0) {
-            return "ID do usuario invalido.";
+        if (texto == null || texto.trim().isEmpty()) {
+            return "O texto da pergunta não pode ser vazio.";
         }
-        if (pergunta.getPergunta() == null || pergunta.getPergunta().trim().isEmpty()) {
-            return "O texto da pergunta nao pode ser vazio.";
-        }
-        if (pergunta.getPalavrasChave() == null || pergunta.getPalavrasChave().trim().isEmpty()) {
-            return "As palavras-chave nao podem ser vazias.";
+        if (palavrasChave == null || palavrasChave.trim().isEmpty()) {
+            return "As palavras-chave não podem ser vazias.";
         }
         try {
-            arqPerguntas.create(pergunta);
+            arqPerguntas.create(new Pergunta(idUsuario, texto.trim(), palavrasChave.trim()));
             return null;
         } catch (Exception e) {
-            return "Erro ao criar pergunta.";
+            return "Não foi possível incluir a pergunta: " + e.getMessage();
         }
     }
 
     public String criar(int idUsuario, String texto, String palavrasChave) {
-        if (idUsuario <= 0) {
-            return "ID do usuario invalido.";
-        }
-        if (texto == null || texto.trim().isEmpty()) {
-            return "O texto da pergunta nao pode ser vazio.";
-        }
-        if (palavrasChave == null || palavrasChave.trim().isEmpty()) {
-            return "As palavras-chave nao podem ser vazias.";
-        }
-        try {
-            Pergunta pergunta = new Pergunta(idUsuario, texto.trim(), palavrasChave.trim());
-            arqPerguntas.create(pergunta);
-            return null;
-        } catch (Exception e) {
-            return "Erro ao criar pergunta.";
-        }
+        return incluir(idUsuario, texto, palavrasChave);
     }
 
-    public String incluir(Pergunta pergunta) {
-        return criar(pergunta);
-    }
-
-    public String incluir(int idUsuario, String texto, String palavrasChave) {
-        return criar(idUsuario, texto, palavrasChave);
-    }
+    // ------------------------------------------------------------------
+    // Consultas
+    // ------------------------------------------------------------------
 
     public Pergunta ler(int id) {
         try {
@@ -75,13 +81,16 @@ public class CrudPergunta {
         }
     }
 
-    public Pergunta buscar(int id) {
-        return ler(id);
-    }
-
+    /**
+     * Devolve todas as perguntas do usuario, da mais antiga para a mais recente.
+     * O caminho percorrido e: idUsuario -> arvore B+ -> lista de idPergunta ->
+     * indice direto ID -> endereco -> registro no arquivo de dados.
+     */
     public Pergunta[] listar(int idUsuario) {
         try {
-            return arqPerguntas.readAllByUsuario(idUsuario);
+            Pergunta[] perguntas = arqPerguntas.readAllByUsuario(idUsuario);
+            Arrays.sort(perguntas, Comparator.comparingLong(Pergunta::getCriacao));
+            return perguntas;
         } catch (Exception e) {
             return new Pergunta[0];
         }
@@ -91,33 +100,38 @@ public class CrudPergunta {
         return listar(idUsuario);
     }
 
-    public String alterar(Pergunta pergunta) {
-        if (pergunta == null) {
-            return "Pergunta nao pode ser nula.";
-        }
-        if (pergunta.getPergunta() == null || pergunta.getPergunta().trim().isEmpty()) {
-            return "O texto da pergunta nao pode ser vazio.";
-        }
-        if (pergunta.getPalavrasChave() == null || pergunta.getPalavrasChave().trim().isEmpty()) {
-            return "As palavras-chave nao podem ser vazias.";
-        }
-        try {
-            pergunta.setAlteracao(System.currentTimeMillis());
-            boolean ok = arqPerguntas.update(pergunta);
-            if (!ok) {
-                return "Pergunta nao encontrada para atualizacao.";
+    /** Apenas as perguntas ainda ativas (as arquivadas somem das listagens publicas). */
+    public Pergunta[] listarAtivas(int idUsuario) {
+        Pergunta[] todas = listar(idUsuario);
+        ArrayList<Pergunta> ativas = new ArrayList<>();
+        for (Pergunta p : todas) {
+            if (p.isAtiva()) {
+                ativas.add(p);
             }
-            return null;
-        } catch (Exception e) {
-            return "Erro ao alterar pergunta.";
         }
+        return ativas.toArray(new Pergunta[0]);
     }
 
-    public String alterar(int id, String novoTexto, String novasPalavras) {
+    // ------------------------------------------------------------------
+    // Alteracao
+    // ------------------------------------------------------------------
+
+    /**
+     * Altera texto e palavras-chave. Campos deixados em branco sao mantidos.
+     * ID, idUsuario e estado nao entram: IDs nunca mudam, cada usuario so
+     * gerencia as proprias perguntas, e o estado so muda pelo arquivamento.
+     */
+    public String alterar(int id, int idUsuario, String novoTexto, String novasPalavras) {
         try {
             Pergunta pergunta = arqPerguntas.read(id);
             if (pergunta == null) {
-                return "Pergunta nao encontrada.";
+                return "Pergunta não encontrada.";
+            }
+            if (pergunta.getIdUsuario() != idUsuario) {
+                return "Esta pergunta pertence a outro usuário.";
+            }
+            if (!pergunta.isAtiva()) {
+                return "Uma pergunta arquivada não pode ser alterada.";
             }
             if (novoTexto != null && !novoTexto.trim().isEmpty()) {
                 pergunta.setPergunta(novoTexto.trim());
@@ -125,62 +139,50 @@ public class CrudPergunta {
             if (novasPalavras != null && !novasPalavras.trim().isEmpty()) {
                 pergunta.setPalavrasChave(novasPalavras.trim());
             }
-            pergunta.setAlteracao(System.currentTimeMillis());
-            boolean ok = arqPerguntas.update(pergunta);
-            if (!ok) {
-                return "Erro ao atualizar pergunta.";
-            }
-            return null;
+            return arqPerguntas.update(pergunta) ? null : "Não foi possível alterar a pergunta.";
         } catch (Exception e) {
-            return "Erro ao alterar pergunta.";
+            return "Não foi possível alterar a pergunta: " + e.getMessage();
         }
     }
 
-    public String atualizar(Pergunta pergunta) {
-        return alterar(pergunta);
-    }
+    // ------------------------------------------------------------------
+    // Arquivamento e exclusao
+    // ------------------------------------------------------------------
 
-    public String atualizar(int id, String novoTexto, String novasPalavras) {
-        return alterar(id, novoTexto, novasPalavras);
-    }
-
-    public String arquivar(int id) {
+    /**
+     * Arquiva a pergunta (ativa = false). Nao e exclusao: o registro continua
+     * valido no arquivo e nos indices, porque outras entidades criadas por
+     * outros usuarios (respostas, votos) dependem dela. O arquivamento e
+     * definitivo: nao existe desarquivar.
+     */
+    public String arquivar(int id, int idUsuario) {
         try {
             Pergunta pergunta = arqPerguntas.read(id);
             if (pergunta == null) {
-                return "Pergunta nao encontrada.";
+                return "Pergunta não encontrada.";
+            }
+            if (pergunta.getIdUsuario() != idUsuario) {
+                return "Esta pergunta pertence a outro usuário.";
             }
             if (!pergunta.isAtiva()) {
-                return "Pergunta ja esta arquivada.";
+                return "Esta pergunta já está arquivada.";
             }
-            boolean ok = arqPerguntas.arquivar(id);
-            if (!ok) {
-                return "Nao foi possivel arquivar a pergunta.";
-            }
-            return null;
+            return arqPerguntas.arquivar(id) ? null : "Não foi possível arquivar a pergunta.";
         } catch (Exception e) {
-            return "Erro ao arquivar pergunta.";
+            return "Não foi possível arquivar a pergunta: " + e.getMessage();
         }
     }
 
+    /** Exclusao fisica (lapide). Usada apenas na cascata da exclusao de usuario. */
     public String excluir(int id) {
         try {
-            Pergunta pergunta = arqPerguntas.read(id);
-            if (pergunta == null) {
-                return "Pergunta nao encontrada.";
+            if (arqPerguntas.read(id) == null) {
+                return "Pergunta não encontrada.";
             }
-            boolean ok = arqPerguntas.delete(id);
-            if (!ok) {
-                return "Nao foi possivel excluir a pergunta.";
-            }
-            return null;
+            return arqPerguntas.delete(id) ? null : "Não foi possível excluir a pergunta.";
         } catch (Exception e) {
-            return "Erro ao excluir pergunta.";
+            return "Não foi possível excluir a pergunta: " + e.getMessage();
         }
-    }
-
-    public String deletar(int id) {
-        return excluir(id);
     }
 
     public String excluirTodasDoUsuario(int idUsuario) {
@@ -188,7 +190,7 @@ public class CrudPergunta {
             arqPerguntas.deleteAllByUsuario(idUsuario);
             return null;
         } catch (Exception e) {
-            return "Erro ao excluir perguntas do usuario.";
+            return "Não foi possível excluir as perguntas do usuário: " + e.getMessage();
         }
     }
 

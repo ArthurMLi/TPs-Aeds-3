@@ -10,16 +10,25 @@ public class ParEmailId implements InterfaceHashExtensivel {
 
     private String email;
     private int id;
-    private static final int TAMANHO_EMAIL = 60;
-    private static final short TAMANHO = 64;
+    public static final int TAMANHO_EMAIL = 100;
+    private static final short TAMANHO = 104;
 
+    /**
+     * Construtor vazio, exigido pela HashExtensivel para montar os cestos.
+     * Nao valida o email: o par vazio e apenas um espaco reservado no cesto.
+     */
     public ParEmailId() {
-        this("", -1);
+        this.email = "";
+        this.id = -1;
     }
 
     public ParEmailId(String email, int id) {
-        if (!(email.contains("@") && email.contains("."))) {
+        if (email == null || !(email.contains("@") && email.contains("."))) {
             throw new IllegalArgumentException("Email inválido.");
+        }
+        if (email.getBytes(java.nio.charset.StandardCharsets.UTF_8).length > TAMANHO_EMAIL) {
+            throw new IllegalArgumentException(
+                "Email muito longo (máximo de " + TAMANHO_EMAIL + " bytes).");
         }
         this.id = id;
         this.email = email;

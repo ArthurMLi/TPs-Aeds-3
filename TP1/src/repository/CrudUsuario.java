@@ -1,177 +1,266 @@
 package repository;
 
-import aed3.Arquivo;
 import entities.Usuario;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.util.Scanner;
+import files.ArquivoPergunta;
+import files.ArquivoUsuario;
+import util.Crypto;
+
 import java.util.regex.Pattern;
 
+/**
+ * Camada de controle da entidade Usuario.
+ *
+ * Nao le nem escreve na tela: recebe dados ja lidos pela visao, aplica as
+ * regras de negocio e conversa com o ArquivoUsuario. Os metodos que podem
+ * falhar por regra devolvem uma String com a mensagem de erro, ou null quando
+ * a operacao deu certo.
+ */
 public class CrudUsuario {
-    private static final Pattern EMAIL_VALIDO = Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");
 
-    private final Scanner console = new Scanner(System.in);
-    private final Arquivo<Usuario> arquivoUsuarios;
+    private static final Pattern EMAIL_VALIDO =
+            Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");
+
+    private final ArquivoUsuario arqUsuarios;
+    private ArquivoPergunta arqPerguntas;
 
     public CrudUsuario() throws Exception {
-        arquivoUsuarios = new Arquivo<>("usuarios", Usuario.class.getConstructor());
+        this.arqUsuarios = new ArquivoUsuario();
     }
 
-    public void criarUsuario() {
-        System.out.println("\nNovo usuario");
-        System.out.println("Preencha os dados do novo usuario:");
-        String email = lerEmail();
-        if (email == null) {
-            return;
-        }
-        String nome = lerTexto("Nome (min. de 4 caracteres): ", 4);
-        if (nome == null) {
-            return;
-        }
-        String senha = lerTexto("Senha (min. de 4 caracteres): ", 4);
-        if (senha == null) {
-            return;
-        }
-        String pergunta = lerTexto("Pergunta secreta (min. de 4 caracteres): ", 4);
-        if (pergunta == null) {
-            return;
-        }
-        String resposta = lerTexto("Resposta secreta (min. de 4 caracteres): ", 4);
-        if (resposta == null) {
-            return;
-        }
-
-        System.out.print("Confirma a criacao do usuario? (S/N) ");
-        if (!confirmar()) {
-            System.out.println("Inclusao cancelada.");
-            return;
-        }
-        try {
-            Usuario usuario = new Usuario(nome, email, gerarHash(senha), pergunta, gerarHash(resposta));
-            // criar o usuario no arquivo retornando um bool pra validar se foi criado
-            // (fazer)
-            System.out.println("Usuario incluido com sucesso. ID: " + usuario.getId());
-        } catch (Exception e) {
-            System.out.println("Erro do sistema. Nao foi possivel criar o usuario.");
-        }
-
+    public CrudUsuario(ArquivoUsuario arqUsuarios) {
+        this.arqUsuarios = arqUsuarios;
     }
 
-    public void buscarUsuario() {
-        System.out.println("\nBusca de usuario");
-        System.out.println("Preencha o email do usuario a ser buscado:");
-        String email = lerEmail();
-        if (email == null) {
-            return;
-        }
-
-        try {
-            Usuario usuario = buscarPorEmail(email);
-            if (usuario == null) {
-                System.out.println("Usuario nao encontrado.");
-            } else {
-                mostrarUsuario(usuario);
-            }
-        } catch (Exception e) {
-            System.out.println("Erro do sistema. Nao foi possivel buscar o usuario.");
-        }
+    /** Permite a exclusao em cascata das perguntas quando o usuario e excluido. */
+    public void setArquivoPergunta(ArquivoPergunta arqPerguntas) {
+        this.arqPerguntas = arqPerguntas;
     }
 
-    public void excluirUsuario() {
-        System.out.println("\nExclusao de usuario");
-        System.out.println("Preencha o email do usuario a ser excluido:");
-        String email = lerEmail();
-        if (email == null) {
-            return;
-        }
-
-        try {
-            Usuario usuario = buscarPorEmail(email);
-            if (usuario == null) {
-                System.out.println("Usuario nao encontrado.");
-                return;
-            }
-
-            mostrarUsuario(usuario);
-            System.out.print("Confirma a exclusao do usuario? (S/N) ");
-            if (confirmar() // && deletar o usuário (fazer)
-            ) {
-                System.out.println("Usuario excluido com sucesso.");
-            } else {
-                System.out.println("Exclusao cancelada.");
-            }
-        } catch (Exception e) {
-            System.out.println("Erro do sistema. Nao foi possivel excluir o usuario.");
-        }
+    public ArquivoUsuario getArquivoUsuario() {
+        return arqUsuarios;
     }
 
-    public void mostrarUsuario(Usuario usuario) {
-        System.out.println("\nDetalhes do usuario:");
-        System.out.println("ID........: " + usuario.getId());
-        System.out.println("Nome......: " + usuario.getNome());
-        System.out.println("Email.....: " + usuario.getEmail());
-        System.out.println("Pergunta..: " + usuario.getPerguntaSecreta());
-    }
+    // ------------------------------------------------------------------
+    // Consultas
+    // ------------------------------------------------------------------
 
+    /** Busca pelo indice indireto (tabela hash extensivel) email -> idUsuario. */
     public Usuario buscarPorEmail(String email) {
-        // Busca um usuário pelo email (fazer)
-        // ArrayList<Usuario> usuarios = arquivoUsuarios.readAll();
-        /*
-         * for (Usuario usuario : usuarios) {
-         * if (usuario.getEmail().equalsIgnoreCase(email)) {
-         * return usuario;
-         * }
-         * }
-         */
+        try {
+            return arqUsuarios.readByEmail(email);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    /** Busca pelo indice direto (ID -> endereco) embutido na classe Arquivo. */
+    public Usuario buscarPorId(int id) {
+        try {
+            return arqUsuarios.read(id);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public boolean emailJaCadastrado(String email) {
+        return buscarPorEmail(email) != null;
+    }
+
+    public static boolean emailValido(String email) {
+        return email != null && EMAIL_VALIDO.matcher(email).matches();
+    }
+
+    // ------------------------------------------------------------------
+    // Inclusao
+    // ------------------------------------------------------------------
+
+    /**
+     * Cadastra um novo usuario. A senha e a resposta secreta nunca sao
+     * armazenadas: guarda-se apenas o hash SHA-256 delas. A resposta secreta
+     * passa antes por normalizacao (sem acentos, minusculas) para tolerar
+     * diferencas de digitacao na hora de recuperar a senha.
+     */
+    public String criar(String nome, String email, String senha,
+                        String perguntaSecreta, String respostaSecreta) {
+        String erro = validarDados(nome, email, senha, perguntaSecreta, respostaSecreta);
+        if (erro != null) {
+            return erro;
+        }
+        try {
+            if (emailJaCadastrado(email)) {
+                return "Já existe um usuário cadastrado com esse e-mail.";
+            }
+            Usuario usuario = new Usuario(
+                    nome.trim(),
+                    email.trim(),
+                    Crypto.hashSenha(senha),
+                    perguntaSecreta.trim(),
+                    Crypto.hashResposta(respostaSecreta));
+            arqUsuarios.create(usuario);
+            return null;
+        } catch (IllegalArgumentException e) {
+            return e.getMessage();
+        } catch (Exception e) {
+            return "Não foi possível criar o usuário: " + e.getMessage();
+        }
+    }
+
+    private String validarDados(String nome, String email, String senha,
+                                String perguntaSecreta, String respostaSecreta) {
+        if (nome == null || nome.trim().length() < 4) {
+            return "O nome deve ter no mínimo 4 caracteres.";
+        }
+        if (!emailValido(email)) {
+            return "E-mail inválido.";
+        }
+        if (senha == null || senha.length() < 4) {
+            return "A senha deve ter no mínimo 4 caracteres.";
+        }
+        if (perguntaSecreta == null || perguntaSecreta.trim().length() < 4) {
+            return "A pergunta secreta deve ter no mínimo 4 caracteres.";
+        }
+        if (respostaSecreta == null || respostaSecreta.trim().isEmpty()) {
+            return "A resposta secreta não pode ser vazia.";
+        }
         return null;
     }
 
+    // ------------------------------------------------------------------
+    // Autenticacao e recuperacao de senha
+    // ------------------------------------------------------------------
+
+    /**
+     * Valida e-mail e senha de uma vez so. Devolve o usuario autenticado ou
+     * null; quem chama nao sabe qual dos dois campos falhou, de proposito.
+     */
+    public Usuario autenticar(String email, String senha) {
+        Usuario usuario = buscarPorEmail(email);
+        if (usuario == null || senha == null) {
+            return null;
+        }
+        if (usuario.getHashSenha().equals(Crypto.hashSenha(senha))) {
+            return usuario;
+        }
+        return null;
+    }
+
+    public boolean respostaSecretaCorreta(Usuario usuario, String resposta) {
+        if (usuario == null || resposta == null) {
+            return false;
+        }
+        return usuario.getHashRespostaSecreta().equals(Crypto.hashResposta(resposta));
+    }
+
+    // ------------------------------------------------------------------
+    // Alteracoes
+    // ------------------------------------------------------------------
+
+    public String alterarNome(Usuario usuario, String novoNome) {
+        if (novoNome == null || novoNome.trim().length() < 4) {
+            return "O nome deve ter no mínimo 4 caracteres.";
+        }
+        String anterior = usuario.getNome();
+        usuario.setNome(novoNome.trim());
+        String erro = gravar(usuario);
+        if (erro != null) {
+            usuario.setNome(anterior);
+        }
+        return erro;
+    }
+
+    /**
+     * Altera o e-mail. Como o e-mail e a chave do indice indireto, o
+     * ArquivoUsuario remove a entrada antiga e insere a nova; o ID do usuario
+     * permanece o mesmo, e por isso nenhum outro indice precisa ser tocado.
+     */
+    public String alterarEmail(Usuario usuario, String novoEmail) {
+        if (!emailValido(novoEmail)) {
+            return "E-mail inválido.";
+        }
+        Usuario dono = buscarPorEmail(novoEmail);
+        if (dono != null && dono.getId() != usuario.getId()) {
+            return "Já existe um usuário cadastrado com esse e-mail.";
+        }
+        String anterior = usuario.getEmail();
+        usuario.setEmail(novoEmail.trim());
+        String erro = gravar(usuario);
+        if (erro != null) {
+            usuario.setEmail(anterior);
+        }
+        return erro;
+    }
+
+    public String alterarSenha(Usuario usuario, String senhaAtual, String novaSenha) {
+        if (senhaAtual != null && !usuario.getHashSenha().equals(Crypto.hashSenha(senhaAtual))) {
+            return "Senha atual incorreta.";
+        }
+        if (novaSenha == null || novaSenha.length() < 4) {
+            return "A nova senha deve ter no mínimo 4 caracteres.";
+        }
+        String anterior = usuario.getHashSenha();
+        usuario.setHashSenha(Crypto.hashSenha(novaSenha));
+        String erro = gravar(usuario);
+        if (erro != null) {
+            usuario.setHashSenha(anterior);
+        }
+        return erro;
+    }
+
+    public String alterarPerguntaSecreta(Usuario usuario, String pergunta, String resposta) {
+        if (pergunta == null || pergunta.trim().length() < 4) {
+            return "A pergunta secreta deve ter no mínimo 4 caracteres.";
+        }
+        if (resposta == null || resposta.trim().isEmpty()) {
+            return "A resposta secreta não pode ser vazia.";
+        }
+        String pAnterior = usuario.getPerguntaSecreta();
+        String rAnterior = usuario.getHashRespostaSecreta();
+        usuario.setPerguntaSecreta(pergunta.trim());
+        usuario.setHashRespostaSecreta(Crypto.hashResposta(resposta));
+        String erro = gravar(usuario);
+        if (erro != null) {
+            usuario.setPerguntaSecreta(pAnterior);
+            usuario.setHashRespostaSecreta(rAnterior);
+        }
+        return erro;
+    }
+
+    private String gravar(Usuario usuario) {
+        try {
+            return arqUsuarios.update(usuario) ? null : "Usuário não encontrado.";
+        } catch (Exception e) {
+            return "Não foi possível gravar a alteração: " + e.getMessage();
+        }
+    }
+
+    // ------------------------------------------------------------------
+    // Exclusao
+    // ------------------------------------------------------------------
+
+    /**
+     * Exclui o usuario. Como o relacionamento e 1:N e as perguntas dependem do
+     * usuario, a exclusao e em cascata: primeiro as perguntas (arquivo de dados
+     * e arvore B+), depois o usuario (arquivo de dados e indice de email).
+     * Apagar o usuario primeiro deixaria perguntas orfas apontando para um ID
+     * que nao existe mais.
+     */
+    public String excluir(int idUsuario) {
+        try {
+            Usuario usuario = arqUsuarios.read(idUsuario);
+            if (usuario == null) {
+                return "Usuário não encontrado.";
+            }
+            if (arqPerguntas != null) {
+                return arqUsuarios.delete(idUsuario, arqPerguntas)
+                        ? null : "Não foi possível excluir o usuário.";
+            }
+            return arqUsuarios.delete(idUsuario) ? null : "Não foi possível excluir o usuário.";
+        } catch (Exception e) {
+            return "Não foi possível excluir o usuário: " + e.getMessage();
+        }
+    }
+
     public void fechar() throws Exception {
-        arquivoUsuarios.close();
-    }
-
-    private String lerEmail() {
-        while (true) {
-            System.out.print("Email(Enter cancela): ");
-            String email = console.nextLine().trim();
-            if (email.isEmpty()) {
-                return null;
-            }
-            if (EMAIL_VALIDO.matcher(email).matches()) {
-                return email;
-            }
-            System.out.println("Email invalido. Informe um email valido.");
-        }
-    }
-
-    private String lerTexto(String mensagem, int tamanhoMinimo) {
-        while (true) {
-            System.out.print(mensagem);
-            String texto = console.nextLine().trim();
-            if (texto.isEmpty()) {
-                return null;
-            }
-            if (texto.length() >= tamanhoMinimo) {
-                return texto;
-            }
-            System.out.println("O valor deve ter no minimo " + tamanhoMinimo + " caracteres.");
-        }
-    }
-
-    private boolean confirmar() {
-        String resposta = console.nextLine().trim();
-        return !resposta.isEmpty() && (resposta.charAt(0) == 'S' || resposta.charAt(0) == 's');
-    }
-
-
-    // Alguem por favor cria uma classe de criptografia migra essa funcao pra la
-    private String gerarHash(String texto) throws Exception {
-        byte[] hash = MessageDigest.getInstance("SHA-256")
-                .digest(texto.getBytes(StandardCharsets.UTF_8));
-        StringBuilder resultado = new StringBuilder();
-        for (byte valor : hash) {
-            resultado.append(String.format("%02x", valor));
-        }
-        return resultado.toString();
+        arqUsuarios.close();
     }
 }

@@ -10,17 +10,39 @@ public class ArquivoPergunta extends Arquivo<Pergunta> {
 
     ArvoreBMais<ParIdId> relUsuarioPergunta;
 
+    /**
+     * Referencia opcional ao arquivo de usuarios, usada apenas para garantir a
+     * integridade referencial na inclusao (nao se cria pergunta apontando para
+     * um idUsuario que nao existe).
+     */
+    private ArquivoUsuario arqUsuarios;
+
     public ArquivoPergunta() throws Exception {
         super("perguntas", Pergunta.class.getConstructor());
         relUsuarioPergunta = new ArvoreBMais<>(
-            ParIdId.class.getConstructor(), 
+            ParIdId.class.getConstructor(),
             5,
             "./dados/perguntas/relUsuarioPergunta.db"
         );
     }
 
+    public void setArquivoUsuario(ArquivoUsuario arqUsuarios) {
+        this.arqUsuarios = arqUsuarios;
+    }
+
+    /**
+     * Inclui a pergunta no arquivo de dados e registra o par
+     * (idUsuario, idPergunta) na arvore B+, que e o que permite responder
+     * "quais sao as perguntas deste usuario" sem varrer o arquivo inteiro.
+     */
     @Override
     public int create(Pergunta pergunta) throws Exception {
+        if (pergunta == null) {
+            throw new IllegalArgumentException("Pergunta não pode ser nula.");
+        }
+        if (arqUsuarios != null && arqUsuarios.read(pergunta.getIdUsuario()) == null) {
+            throw new Exception("Usuário " + pergunta.getIdUsuario() + " não existe.");
+        }
         int id = super.create(pergunta);
         relUsuarioPergunta.create(new ParIdId(pergunta.getIdUsuario(), id));
         return id;
@@ -49,8 +71,21 @@ public class ArquivoPergunta extends Arquivo<Pergunta> {
         return resp;
     }
 
+    /**
+     * Altera a pergunta e carimba a data/hora de alteracao.
+     * O idUsuario e imutavel: se ele pudesse mudar, o par gravado na arvore B+
+     * ficaria apontando para o usuario errado e a listagem quebraria.
+     */
     @Override
     public boolean update(Pergunta pergunta) throws Exception {
+        Pergunta atual = super.read(pergunta.getId());
+        if (atual == null) {
+            return false;
+        }
+        if (atual.getIdUsuario() != pergunta.getIdUsuario()) {
+            throw new Exception("O idUsuario de uma pergunta não pode ser alterado.");
+        }
+        pergunta.setCriacao(atual.getCriacao());
         pergunta.setAlteracao(System.currentTimeMillis());
         return super.update(pergunta);
     }
