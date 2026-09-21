@@ -38,10 +38,10 @@ public class ArquivoPergunta extends Arquivo<Pergunta> {
     @Override
     public int create(Pergunta pergunta) throws Exception {
         if (pergunta == null) {
-            throw new IllegalArgumentException("Pergunta não pode ser nula.");
+            throw new IllegalArgumentException("Pergunta nao pode ser nula.");
         }
         if (arqUsuarios != null && arqUsuarios.read(pergunta.getIdUsuario()) == null) {
-            throw new Exception("Usuário " + pergunta.getIdUsuario() + " não existe.");
+            throw new Exception("Usuario " + pergunta.getIdUsuario() + " nao existe.");
         }
         int id = super.create(pergunta);
         relUsuarioPergunta.create(new ParIdId(pergunta.getIdUsuario(), id));
@@ -83,7 +83,7 @@ public class ArquivoPergunta extends Arquivo<Pergunta> {
             return false;
         }
         if (atual.getIdUsuario() != pergunta.getIdUsuario()) {
-            throw new Exception("O idUsuario de uma pergunta não pode ser alterado.");
+            throw new Exception("O idUsuario de uma pergunta nao pode ser alterado.");
         }
         pergunta.setCriacao(atual.getCriacao());
         pergunta.setAlteracao(System.currentTimeMillis());

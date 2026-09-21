@@ -31,10 +31,10 @@ public class ArquivoUsuario extends Arquivo<Usuario> {
     @Override
     public int create(Usuario usuario) throws Exception {
         if (usuario == null) {
-            throw new IllegalArgumentException("Usuário não pode ser nulo.");
+            throw new IllegalArgumentException("Usuario nao pode ser nulo.");
         }
         if (readByEmail(usuario.getEmail()) != null) {
-            throw new Exception("Já existe um usuário cadastrado com esse e-mail.");
+            throw new Exception("Ja existe um usuario cadastrado com esse e-mail.");
         }
         // Monta o par antes de gravar: se o email for invalido ou longo demais,
         // o construtor lanca excecao aqui, sem sujar o arquivo de dados.
@@ -73,7 +73,7 @@ public class ArquivoUsuario extends Arquivo<Usuario> {
         if (emailMudou) {
             Usuario dono = readByEmail(novo.getEmail());
             if (dono != null && dono.getId() != novo.getId()) {
-                throw new Exception("Já existe um usuário cadastrado com esse e-mail.");
+                throw new Exception("Ja existe um usuario cadastrado com esse e-mail.");
             }
             // Valida o novo email antes de mexer em qualquer arquivo.
             new ParEmailId(novo.getEmail(), novo.getId());

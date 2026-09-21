@@ -20,7 +20,7 @@ public class MenuMeusDados {
     public void mostrar(Usuario usuario) {
         char opcao;
         do {
-            Console.cabecalho("Início > Minha área > Meus dados");
+            Console.cabecalho("Inicio > Minha area > Meus dados");
             Console.mensagem("Nome ...........: " + usuario.getNome());
             Console.mensagem("E-mail .........: " + usuario.getEmail());
             Console.mensagem("Pergunta secreta: " + usuario.getPerguntaSecreta());
@@ -28,7 +28,7 @@ public class MenuMeusDados {
             Console.mensagem("(A) Alterar nome");
             Console.mensagem("(B) Alterar email");
             Console.mensagem("(C) Alterar senha");
-            Console.mensagem("(D) Alterar pergunta e resposta de recuperação da senha");
+            Console.mensagem("(D) Alterar pergunta e resposta de recuperacao da senha");
             Console.mensagem("(R) Retornar ao menu anterior");
             Console.mensagem("");
             opcao = Console.lerOpcao();
@@ -55,7 +55,7 @@ public class MenuMeusDados {
     }
 
     private void alterarNome(Usuario usuario) {
-        Console.cabecalho("Início > Minha área > Meus dados > Alterar nome");
+        Console.cabecalho("Inicio > Minha area > Meus dados > Alterar nome");
         Console.mensagem("Nome atual: " + usuario.getNome());
         String novo = Console.lerTexto("Novo nome (ENTER cancela): ", 4);
         if (novo == null) {
@@ -74,29 +74,29 @@ public class MenuMeusDados {
      * perguntas continuam vinculadas normalmente.
      */
     private void alterarEmail(Usuario usuario) {
-        Console.cabecalho("Início > Minha área > Meus dados > Alterar email");
+        Console.cabecalho("Inicio > Minha area > Meus dados > Alterar email");
         Console.mensagem("E-mail atual: " + usuario.getEmail());
         String novo = Console.lerTexto("Novo e-mail (ENTER cancela): ", 1);
         if (novo == null) {
             return;
         }
         relatar(crudUsuario.alterarEmail(usuario, novo),
-                "E-mail alterado. Use o novo e-mail no próximo acesso.");
+                "E-mail alterado. Use o novo e-mail no proximo acesso.");
     }
 
     private void alterarSenha(Usuario usuario) {
-        Console.cabecalho("Início > Minha área > Meus dados > Alterar senha");
+        Console.cabecalho("Inicio > Minha area > Meus dados > Alterar senha");
         String atual = Console.lerTexto("Senha atual (ENTER cancela): ", 1);
         if (atual == null) {
             return;
         }
-        String nova = Console.lerTexto("Nova senha (mín. 4 caracteres, ENTER cancela): ", 4);
+        String nova = Console.lerTexto("Nova senha (min. 4 caracteres, ENTER cancela): ", 4);
         if (nova == null) {
             return;
         }
         String confirmacao = Console.lerTexto("Confirme a nova senha: ", 1);
         if (confirmacao == null || !nova.equals(confirmacao)) {
-            Console.erro("As senhas não conferem.");
+            Console.erro("As senhas nao conferem.");
             Console.pausar();
             return;
         }
@@ -104,9 +104,9 @@ public class MenuMeusDados {
     }
 
     private void alterarPerguntaSecreta(Usuario usuario) {
-        Console.cabecalho("Início > Minha área > Meus dados > Recuperação de senha");
+        Console.cabecalho("Inicio > Minha area > Meus dados > Recuperacao de senha");
         Console.mensagem("Pergunta atual: " + usuario.getPerguntaSecreta());
-        String pergunta = Console.lerTexto("Nova pergunta secreta (mín. 4 caracteres, ENTER cancela): ", 4);
+        String pergunta = Console.lerTexto("Nova pergunta secreta (min. 4 caracteres, ENTER cancela): ", 4);
         if (pergunta == null) {
             return;
         }
@@ -115,7 +115,7 @@ public class MenuMeusDados {
             return;
         }
         relatar(crudUsuario.alterarPerguntaSecreta(usuario, pergunta, resposta),
-                "Pergunta e resposta de recuperação alteradas.");
+                "Pergunta e resposta de recuperacao alteradas.");
     }
 
     private void relatar(String erro, String mensagemDeSucesso) {

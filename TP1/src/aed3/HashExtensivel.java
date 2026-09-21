@@ -51,9 +51,9 @@ public class HashExtensivel<T extends InterfaceHashExtensivel> {
     public Cesto(Constructor<T> ct, int qtdmax, int pl) throws Exception {
       construtor = ct;
       if (qtdmax > 32767)   // assegura que a qtd pode ser do tipo short
-        throw new Exception("Quantidade máxima de 32.767 elementos");
+        throw new Exception("Quantidade maxima de 32.767 elementos");
       if (pl > 20)          // assegura que o diretório não tenha mais que 8 MB (1 milhão de endereços)
-        throw new Exception("Profundidade local máxima de 20 bits");
+        throw new Exception("Profundidade local maxima de 20 bits");
       profundidadeLocal = (byte) pl;
       quantidade = 0;
       quantidadeMaxima = (short) qtdmax;
@@ -320,7 +320,7 @@ public class HashExtensivel<T extends InterfaceHashExtensivel> {
 
     // Testa se a chave já existe no cesto
     if (c.read(elem.hashCode()) != null)
-      throw new Exception("Elemento já existe");
+      throw new Exception("Elemento ja existe");
 
     // Testa se o cesto já não está cheio
     // Se não estiver, create o par de chave e dado
@@ -464,13 +464,13 @@ public class HashExtensivel<T extends InterfaceHashExtensivel> {
       arqDiretorio.read(bd);
       diretorio = new Diretorio();
       diretorio.deserialize(bd);
-      System.out.println("\nDIRETÓRIO ------------------");
+      System.out.println("\nDIRETORIO ------------------");
       System.out.println(diretorio);
 
       System.out.println("\nCESTOS ---------------------");
       arqCestos.seek(0);
       while (arqCestos.getFilePointer() != arqCestos.length()) {
-        System.out.println("Endereço: " + arqCestos.getFilePointer());
+        System.out.println("Endereco: " + arqCestos.getFilePointer());
         Cesto c = new Cesto(construtor, quantidadeDadosPorCesto);
         byte[] ba = new byte[c.size()];
         arqCestos.read(ba);

@@ -13,7 +13,7 @@ public class Console {
 
     private static final Scanner ENTRADA = new Scanner(System.in);
 
-    public static final String TITULO = "AJUDA AÍ 1.0";
+    public static final String TITULO = "AJUDA AI 1.0";
 
     private Console() {
     }
@@ -37,7 +37,7 @@ public class Console {
 
     /** Le uma opcao de menu e devolve a primeira letra em maiuscula. */
     public static char lerOpcao() {
-        String linha = lerLinha("Opção: ");
+        String linha = lerLinha("Opcao: ");
         if (linha.isEmpty()) {
             return ' ';
         }
@@ -54,7 +54,7 @@ public class Console {
             if (texto.length() >= tamanhoMinimo) {
                 return texto;
             }
-            erro("O valor deve ter no mínimo " + tamanhoMinimo + " caracteres.");
+            erro("O valor deve ter no minimo " + tamanhoMinimo + " caracteres.");
         }
     }
 
@@ -77,7 +77,7 @@ public class Console {
     }
 
     public static void opcaoInvalida() {
-        erro("Opção inválida.");
+        erro("Opcao invalida.");
     }
 
     public static void pausar() {

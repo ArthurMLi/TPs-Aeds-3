@@ -59,7 +59,7 @@ public class Principal {
                 arqUsuarios.close();
             }
         } catch (Exception e) {
-            Console.erro("Erro ao fechar o arquivo de usuários: " + e.getMessage());
+            Console.erro("Erro ao fechar o arquivo de usuarios: " + e.getMessage());
         }
     }
 }

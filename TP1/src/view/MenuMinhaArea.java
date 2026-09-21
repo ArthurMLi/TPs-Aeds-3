@@ -24,7 +24,7 @@ public class MenuMinhaArea {
     public void mostrar(Usuario usuario) {
         char opcao;
         do {
-            Console.cabecalho("Início > Minha área");
+            Console.cabecalho("Inicio > Minha area");
             Console.mensagem("(A) Meus dados");
             Console.mensagem("(B) Minhas perguntas");
             Console.mensagem("(C) Minhas respostas");
@@ -41,11 +41,11 @@ public class MenuMinhaArea {
                     menuPerguntas.mostrar(usuario);
                     break;
                 case 'C':
-                    Console.erro("As respostas serão implementadas no próximo trabalho prático.");
+                    Console.erro("As respostas serao implementadas no proximo trabalho pratico.");
                     Console.pausar();
                     break;
                 case 'D':
-                    Console.erro("Os votos serão implementados em um trabalho prático posterior.");
+                    Console.erro("Os votos serao implementados em um trabalho pratico posterior.");
                     Console.pausar();
                     break;
                 case 'R':

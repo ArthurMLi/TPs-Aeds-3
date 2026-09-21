@@ -24,11 +24,11 @@ public class ParEmailId implements InterfaceHashExtensivel {
 
     public ParEmailId(String email, int id) {
         if (email == null || !(email.contains("@") && email.contains("."))) {
-            throw new IllegalArgumentException("Email inválido.");
+            throw new IllegalArgumentException("Email invalido.");
         }
         if (email.getBytes(java.nio.charset.StandardCharsets.UTF_8).length > TAMANHO_EMAIL) {
             throw new IllegalArgumentException(
-                "Email muito longo (máximo de " + TAMANHO_EMAIL + " bytes).");
+                "Email muito longo (maximo de " + TAMANHO_EMAIL + " bytes).");
         }
         this.id = id;
         this.email = email;

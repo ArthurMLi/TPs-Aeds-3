@@ -32,7 +32,7 @@ public class MenuPerguntas {
     public void mostrar(Usuario usuario) {
         char opcao;
         do {
-            Console.cabecalho("Início > Minha área > Minhas perguntas");
+            Console.cabecalho("Inicio > Minha area > Minhas perguntas");
             Console.mensagem("(A) Listar");
             Console.mensagem("(B) Incluir");
             Console.mensagem("(C) Alterar");
@@ -78,7 +78,7 @@ public class MenuPerguntas {
         Console.mensagem("\nMINHAS PERGUNTAS");
         Console.mensagem("");
         if (perguntas.length == 0) {
-            Console.mensagem("Você ainda não cadastrou nenhuma pergunta.");
+            Console.mensagem("Voce ainda nao cadastrou nenhuma pergunta.");
             return perguntas;
         }
 
@@ -111,7 +111,7 @@ public class MenuPerguntas {
             return null;
         }
 
-        String entrada = Console.lerTexto("Número da pergunta a " + acao + " (ENTER cancela): ", 1);
+        String entrada = Console.lerTexto("Numero da pergunta a " + acao + " (ENTER cancela): ", 1);
         if (entrada == null) {
             return null;
         }
@@ -120,12 +120,12 @@ public class MenuPerguntas {
         try {
             numero = Integer.parseInt(entrada);
         } catch (NumberFormatException e) {
-            Console.erro("Informe um número válido.");
+            Console.erro("Informe um numero valido.");
             Console.pausar();
             return null;
         }
         if (numero < 1 || numero > perguntas.length) {
-            Console.erro("Não existe pergunta com esse número.");
+            Console.erro("Nao existe pergunta com esse numero.");
             Console.pausar();
             return null;
         }
@@ -142,22 +142,22 @@ public class MenuPerguntas {
      * quem esta logado, as datas vem do relogio e a nota comeca em zero.
      */
     private void incluir(Usuario usuario) {
-        Console.cabecalho("Início > Minha área > Minhas perguntas > Incluir");
+        Console.cabecalho("Inicio > Minha area > Minhas perguntas > Incluir");
         String texto = Console.lerTexto("Pergunta (ENTER cancela): ", 1);
         if (texto == null) {
             return;
         }
-        Console.mensagem("Separe as palavras-chave por ponto-e-vírgula. Ex.: pão;mofado;saúde");
+        Console.mensagem("Separe as palavras-chave por ponto-e-virgula. Ex.: pao;mofado;saude");
         String palavras = Console.lerTexto("Palavras-chave (ENTER cancela): ", 1);
         if (palavras == null) {
             return;
         }
-        if (!Console.confirmar("\nConfirma a inclusão da pergunta?")) {
-            Console.mensagem("Inclusão cancelada.");
+        if (!Console.confirmar("\nConfirma a inclusao da pergunta?")) {
+            Console.mensagem("Inclusao cancelada.");
             Console.pausar();
             return;
         }
-        relatar(crudPergunta.incluir(usuario.getId(), texto, palavras), "Pergunta incluída.");
+        relatar(crudPergunta.incluir(usuario.getId(), texto, palavras), "Pergunta incluida.");
     }
 
     // ------------------------------------------------------------------
@@ -170,13 +170,13 @@ public class MenuPerguntas {
      * pelo ArquivoPergunta.
      */
     private void alterar(Usuario usuario) {
-        Console.cabecalho("Início > Minha área > Minhas perguntas > Alterar");
+        Console.cabecalho("Inicio > Minha area > Minhas perguntas > Alterar");
         Pergunta pergunta = escolher(usuario, "alterar");
         if (pergunta == null) {
             return;
         }
         if (!pergunta.isAtiva()) {
-            Console.erro("Uma pergunta arquivada não pode ser alterada.");
+            Console.erro("Uma pergunta arquivada nao pode ser alterada.");
             Console.pausar();
             return;
         }
@@ -192,8 +192,8 @@ public class MenuPerguntas {
             Console.pausar();
             return;
         }
-        if (!Console.confirmar("\nConfirma a alteração?")) {
-            Console.mensagem("Alteração cancelada.");
+        if (!Console.confirmar("\nConfirma a alteracao?")) {
+            Console.mensagem("Alteracao cancelada.");
             Console.pausar();
             return;
         }
@@ -211,19 +211,19 @@ public class MenuPerguntas {
      * dependem dele. A operacao e definitiva.
      */
     private void arquivar(Usuario usuario) {
-        Console.cabecalho("Início > Minha área > Minhas perguntas > Arquivar");
+        Console.cabecalho("Inicio > Minha area > Minhas perguntas > Arquivar");
         Pergunta pergunta = escolher(usuario, "arquivar");
         if (pergunta == null) {
             return;
         }
         if (!pergunta.isAtiva()) {
-            Console.erro("Esta pergunta já está arquivada.");
+            Console.erro("Esta pergunta ja esta arquivada.");
             Console.pausar();
             return;
         }
 
         Console.mensagem("\nPergunta: " + pergunta.getPergunta());
-        Console.mensagem("O arquivamento é definitivo: não será possível desarquivar.");
+        Console.mensagem("O arquivamento e definitivo: nao sera possivel desarquivar.");
         if (!Console.confirmar("Confirma o arquivamento?")) {
             Console.mensagem("Arquivamento cancelado.");
             Console.pausar();

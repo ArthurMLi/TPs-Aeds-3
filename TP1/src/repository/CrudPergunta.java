@@ -49,19 +49,19 @@ public class CrudPergunta {
      */
     public String incluir(int idUsuario, String texto, String palavrasChave) {
         if (idUsuario <= 0) {
-            return "Usuário inválido.";
+            return "Usuario invalido.";
         }
         if (texto == null || texto.trim().isEmpty()) {
-            return "O texto da pergunta não pode ser vazio.";
+            return "O texto da pergunta nao pode ser vazio.";
         }
         if (palavrasChave == null || palavrasChave.trim().isEmpty()) {
-            return "As palavras-chave não podem ser vazias.";
+            return "As palavras-chave nao podem ser vazias.";
         }
         try {
             arqPerguntas.create(new Pergunta(idUsuario, texto.trim(), palavrasChave.trim()));
             return null;
         } catch (Exception e) {
-            return "Não foi possível incluir a pergunta: " + e.getMessage();
+            return "Nao foi possivel incluir a pergunta: " + e.getMessage();
         }
     }
 
@@ -125,13 +125,13 @@ public class CrudPergunta {
         try {
             Pergunta pergunta = arqPerguntas.read(id);
             if (pergunta == null) {
-                return "Pergunta não encontrada.";
+                return "Pergunta nao encontrada.";
             }
             if (pergunta.getIdUsuario() != idUsuario) {
-                return "Esta pergunta pertence a outro usuário.";
+                return "Esta pergunta pertence a outro usuario.";
             }
             if (!pergunta.isAtiva()) {
-                return "Uma pergunta arquivada não pode ser alterada.";
+                return "Uma pergunta arquivada nao pode ser alterada.";
             }
             if (novoTexto != null && !novoTexto.trim().isEmpty()) {
                 pergunta.setPergunta(novoTexto.trim());
@@ -139,9 +139,9 @@ public class CrudPergunta {
             if (novasPalavras != null && !novasPalavras.trim().isEmpty()) {
                 pergunta.setPalavrasChave(novasPalavras.trim());
             }
-            return arqPerguntas.update(pergunta) ? null : "Não foi possível alterar a pergunta.";
+            return arqPerguntas.update(pergunta) ? null : "Nao foi possivel alterar a pergunta.";
         } catch (Exception e) {
-            return "Não foi possível alterar a pergunta: " + e.getMessage();
+            return "Nao foi possivel alterar a pergunta: " + e.getMessage();
         }
     }
 
@@ -159,17 +159,17 @@ public class CrudPergunta {
         try {
             Pergunta pergunta = arqPerguntas.read(id);
             if (pergunta == null) {
-                return "Pergunta não encontrada.";
+                return "Pergunta nao encontrada.";
             }
             if (pergunta.getIdUsuario() != idUsuario) {
-                return "Esta pergunta pertence a outro usuário.";
+                return "Esta pergunta pertence a outro usuario.";
             }
             if (!pergunta.isAtiva()) {
-                return "Esta pergunta já está arquivada.";
+                return "Esta pergunta ja esta arquivada.";
             }
-            return arqPerguntas.arquivar(id) ? null : "Não foi possível arquivar a pergunta.";
+            return arqPerguntas.arquivar(id) ? null : "Nao foi possivel arquivar a pergunta.";
         } catch (Exception e) {
-            return "Não foi possível arquivar a pergunta: " + e.getMessage();
+            return "Nao foi possivel arquivar a pergunta: " + e.getMessage();
         }
     }
 
@@ -177,11 +177,11 @@ public class CrudPergunta {
     public String excluir(int id) {
         try {
             if (arqPerguntas.read(id) == null) {
-                return "Pergunta não encontrada.";
+                return "Pergunta nao encontrada.";
             }
-            return arqPerguntas.delete(id) ? null : "Não foi possível excluir a pergunta.";
+            return arqPerguntas.delete(id) ? null : "Nao foi possivel excluir a pergunta.";
         } catch (Exception e) {
-            return "Não foi possível excluir a pergunta: " + e.getMessage();
+            return "Nao foi possivel excluir a pergunta: " + e.getMessage();
         }
     }
 
@@ -190,7 +190,7 @@ public class CrudPergunta {
             arqPerguntas.deleteAllByUsuario(idUsuario);
             return null;
         } catch (Exception e) {
-            return "Não foi possível excluir as perguntas do usuário: " + e.getMessage();
+            return "Nao foi possivel excluir as perguntas do usuario: " + e.getMessage();
         }
     }
 

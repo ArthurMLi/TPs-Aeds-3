@@ -22,8 +22,8 @@ public class MenuPrincipal {
     public void mostrar(Usuario usuario) {
         char opcao;
         do {
-            Console.cabecalho("Início");
-            Console.mensagem("(A) Minha área");
+            Console.cabecalho("Inicio");
+            Console.mensagem("(A) Minha area");
             Console.mensagem("(B) Buscar perguntas");
             Console.mensagem("(S) Sair");
             Console.mensagem("");
@@ -34,11 +34,11 @@ public class MenuPrincipal {
                     menuMinhaArea.mostrar(usuario);
                     break;
                 case 'B':
-                    Console.erro("A busca por perguntas será implementada no próximo trabalho prático.");
+                    Console.erro("A busca por perguntas sera implementada no proximo trabalho pratico.");
                     Console.pausar();
                     break;
                 case 'S':
-                    Console.mensagem("\nSessão encerrada.");
+                    Console.mensagem("\nSessao encerrada.");
                     break;
                 default:
                     Console.opcaoInvalida();

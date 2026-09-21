@@ -417,10 +417,10 @@ public class Arquivo<T extends aed3.InterfaceRegistro> {
         // Substitui o arquivo original pelo arquivo temporário reorganizado
         File originalFile = new File("./dados/" + nomeEntidade + ".db");
         if (!originalFile.delete()) {
-            throw new IOException("Não foi possível excluir o arquivo original.");
+            throw new IOException("Nao foi possivel excluir o arquivo original.");
         }
         if (!tempFile.renameTo(originalFile)) {
-            throw new IOException("Não foi possível renomear o arquivo temporário.");
+            throw new IOException("Nao foi possivel renomear o arquivo temporario.");
         }
 
         // Reabre o arquivo reorganizado

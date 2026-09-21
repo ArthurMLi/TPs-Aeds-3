@@ -88,7 +88,7 @@ public class CrudUsuario {
         }
         try {
             if (emailJaCadastrado(email)) {
-                return "Já existe um usuário cadastrado com esse e-mail.";
+                return "Ja existe um usuario cadastrado com esse e-mail.";
             }
             Usuario usuario = new Usuario(
                     nome.trim(),
@@ -101,26 +101,26 @@ public class CrudUsuario {
         } catch (IllegalArgumentException e) {
             return e.getMessage();
         } catch (Exception e) {
-            return "Não foi possível criar o usuário: " + e.getMessage();
+            return "Nao foi possivel criar o usuario: " + e.getMessage();
         }
     }
 
     private String validarDados(String nome, String email, String senha,
                                 String perguntaSecreta, String respostaSecreta) {
         if (nome == null || nome.trim().length() < 4) {
-            return "O nome deve ter no mínimo 4 caracteres.";
+            return "O nome deve ter no minimo 4 caracteres.";
         }
         if (!emailValido(email)) {
-            return "E-mail inválido.";
+            return "E-mail invalido.";
         }
         if (senha == null || senha.length() < 4) {
-            return "A senha deve ter no mínimo 4 caracteres.";
+            return "A senha deve ter no minimo 4 caracteres.";
         }
         if (perguntaSecreta == null || perguntaSecreta.trim().length() < 4) {
-            return "A pergunta secreta deve ter no mínimo 4 caracteres.";
+            return "A pergunta secreta deve ter no minimo 4 caracteres.";
         }
         if (respostaSecreta == null || respostaSecreta.trim().isEmpty()) {
-            return "A resposta secreta não pode ser vazia.";
+            return "A resposta secreta nao pode ser vazia.";
         }
         return null;
     }
@@ -157,7 +157,7 @@ public class CrudUsuario {
 
     public String alterarNome(Usuario usuario, String novoNome) {
         if (novoNome == null || novoNome.trim().length() < 4) {
-            return "O nome deve ter no mínimo 4 caracteres.";
+            return "O nome deve ter no minimo 4 caracteres.";
         }
         String anterior = usuario.getNome();
         usuario.setNome(novoNome.trim());
@@ -175,11 +175,11 @@ public class CrudUsuario {
      */
     public String alterarEmail(Usuario usuario, String novoEmail) {
         if (!emailValido(novoEmail)) {
-            return "E-mail inválido.";
+            return "E-mail invalido.";
         }
         Usuario dono = buscarPorEmail(novoEmail);
         if (dono != null && dono.getId() != usuario.getId()) {
-            return "Já existe um usuário cadastrado com esse e-mail.";
+            return "Ja existe um usuario cadastrado com esse e-mail.";
         }
         String anterior = usuario.getEmail();
         usuario.setEmail(novoEmail.trim());
@@ -195,7 +195,7 @@ public class CrudUsuario {
             return "Senha atual incorreta.";
         }
         if (novaSenha == null || novaSenha.length() < 4) {
-            return "A nova senha deve ter no mínimo 4 caracteres.";
+            return "A nova senha deve ter no minimo 4 caracteres.";
         }
         String anterior = usuario.getHashSenha();
         usuario.setHashSenha(Crypto.hashSenha(novaSenha));
@@ -208,10 +208,10 @@ public class CrudUsuario {
 
     public String alterarPerguntaSecreta(Usuario usuario, String pergunta, String resposta) {
         if (pergunta == null || pergunta.trim().length() < 4) {
-            return "A pergunta secreta deve ter no mínimo 4 caracteres.";
+            return "A pergunta secreta deve ter no minimo 4 caracteres.";
         }
         if (resposta == null || resposta.trim().isEmpty()) {
-            return "A resposta secreta não pode ser vazia.";
+            return "A resposta secreta nao pode ser vazia.";
         }
         String pAnterior = usuario.getPerguntaSecreta();
         String rAnterior = usuario.getHashRespostaSecreta();
@@ -227,9 +227,9 @@ public class CrudUsuario {
 
     private String gravar(Usuario usuario) {
         try {
-            return arqUsuarios.update(usuario) ? null : "Usuário não encontrado.";
+            return arqUsuarios.update(usuario) ? null : "Usuario nao encontrado.";
         } catch (Exception e) {
-            return "Não foi possível gravar a alteração: " + e.getMessage();
+            return "Nao foi possivel gravar a alteracao: " + e.getMessage();
         }
     }
 
@@ -248,15 +248,15 @@ public class CrudUsuario {
         try {
             Usuario usuario = arqUsuarios.read(idUsuario);
             if (usuario == null) {
-                return "Usuário não encontrado.";
+                return "Usuario nao encontrado.";
             }
             if (arqPerguntas != null) {
                 return arqUsuarios.delete(idUsuario, arqPerguntas)
-                        ? null : "Não foi possível excluir o usuário.";
+                        ? null : "Nao foi possivel excluir o usuario.";
             }
-            return arqUsuarios.delete(idUsuario) ? null : "Não foi possível excluir o usuário.";
+            return arqUsuarios.delete(idUsuario) ? null : "Nao foi possivel excluir o usuario.";
         } catch (Exception e) {
-            return "Não foi possível excluir o usuário: " + e.getMessage();
+            return "Nao foi possivel excluir o usuario: " + e.getMessage();
         }
     }
 
