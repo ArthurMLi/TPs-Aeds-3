@@ -12,7 +12,7 @@
 O vídeo demonstrativo com os fluxos operacionais exigidos pelo trabalho está disponível no YouTube:
 - **Link do Vídeo:** [Demonstração TP1 - Ajuda Aí 1.0](https://www.youtube.com/watch?v=j-f7jbeCIKs)
 
-1. DESCRICAO DO SISTEMA
+### 1. DESCRICAO DO SISTEMA
 
 O Ajuda Ai 1.0 é um sistema de gestão de forum baseado em terminal que gerencia o ciclo completo de usuarios e perguntas armazenados diretamente em arquivos binarios, sem utilização de gerenciadores de banco de dados externos. O foco do projeto é a estruturação e manipulação do relacionamento 1:N (um para muitos).
 
