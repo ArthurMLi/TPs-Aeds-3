@@ -1,13 +1,13 @@
 # RELATORIO DO TRABALHO PRATICO 1 - AEDS III
 ## SISTEMA: Ajuda Ai 1.0 (Relacionamento 1:N)
 
-## PARTICIPANTES:
+### PARTICIPANTES:
 - Arthur Mendes Lima
 - Gabriel Teodoro Gomes
 - Jean Carlos Lopes Lellis
 - Nicolas Alexandre Torres Dias
 
-## Vídeo de Demonstração
+### Vídeo de Demonstração
 
 O vídeo demonstrativo com os fluxos operacionais exigidos pelo trabalho está disponível no YouTube:
 - **Link do Vídeo:** [Demonstração TP1 - Ajuda Aí 1.0](https://www.youtube.com/watch?v=j-f7jbeCIKs)
