@@ -70,7 +70,7 @@ Para recuperar rapidamente todas as perguntas de um usuario sem efetuar varredur
 
 ### 5. CHECKLIST
 
-- [ X ] Ha um CRUD de usuarios com indices funcionando?
+- [ x ] Ha um CRUD de usuarios com indices funcionando?
 Sim. ArquivoUsuario estende Arquivo<Usuario>, implementando indice direto por ID e indice indireto de e-mail com Tabela Hash Extensivel, tratando sincronizacao em insercoes, atualizacoes e exclusoes.
 
 2. Ha um CRUD de perguntas funcionando?
