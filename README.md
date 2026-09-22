@@ -63,30 +63,30 @@ O e-mail e chave de busca unica no indice secundario em Hash Extensivel. Em estr
 A exclusão tradicional marca uma lapide no registro binario, desaloca o identificador dos indices e disponibiliza o espaco fisico na lista de espacos livres do arquivo, fazendo com que o dado deixe de existir para o sistema. Já o arquivamento altera somente o atributo booleano "ativa = false" da entidade Pergunta. O registro fisico e suas entradas nos indices permanecem intactos, permitindo que a pergunta continue sendo lida historicamente, mas impedindo que receba novas interacoes. Isso preserva a integridade de dados correlacionados de terceiros (como respostas ou votos).
 
 - Exclusao em Cascata (CASCADE):
-Para impedir a existencia de perguntas orfas (perguntas apontando para um autor inexistente), a remocao de um usuario em CrudUsuario exige a execucao em cascata. O sistema primeiro consulta a Arvore B+ para obter todas as perguntas vinculadas ao idUsuario e executa a exclusao completa de cada uma (registro e indices). Apenas apos limpar todas as dependencias o registro do usuario e seu respectivo indice de e-mail são removidos.
+Para impedir a existência de perguntas orfãs (perguntas apontando para um autor inexistente), a remoção de um usuario em CrudUsuario exige a execução em cascata. O sistema primeiro consulta a Arvore B+ para obter todas as perguntas vinculadas ao idUsuario e executa a exclusão completa de cada uma (registro e indices). Apenas apos limpar todas as dependencias o registro do usuario e seu respectivo indice de e-mail são removidos.
 
 - Listagem 1:N com Coringa na Arvore B+:
-Para recuperar rapidamente todas as perguntas de um usuario sem efetuar varredura sequencial completa no arquivo de dados, foi implementada uma Arvore B+ indexada com pares ParIdId(idUsuario, idPergunta). Na busca, utiliza-se a chave de consulta com coringa ParIdId(idUsuario, -1). O metodo compareTo ignora o segundo elemento quando este e -1, fazendo com que a arvore devolva todos os pares pertencentes àquele autor em ordem. O sistema entao consulta o indice direto por ID apenas para os IDs retornados, minimizando acessos a disco.
+Para recuperar rapidamente todas as perguntas de um usuario sem efetuar varredura sequencial completa no arquivo de dados, foi implementada uma Arvore B+ indexada com pares ParIdId(idUsuario, idPergunta). Na busca, utiliza-se a chave de consulta com coringa ParIdId(idUsuario, -1). O metodo compareTo ignora o segundo elemento quando este e -1, fazendo com que a arvore devolva todos os pares pertencentes àquele autor em ordem. O sistema então consulta o indice direto por ID apenas para os IDs retornados, minimizando acessos a disco.
 
 ### 5. CHECKLIST
 
-- [ x ] Ha um CRUD de usuarios com indices funcionando?
+- [x] Ha um CRUD de usuarios com indices funcionando?
 Sim. ArquivoUsuario estende Arquivo<Usuario>, implementando indice direto por ID e indice indireto de e-mail com Tabela Hash Extensivel, tratando sincronizacao em insercoes, atualizacoes e exclusoes.
 
-2. Ha um CRUD de perguntas funcionando?
+- [x] Ha um CRUD de perguntas funcionando?
 Sim. ArquivoPergunta estende Arquivo<Pergunta>, incorporando indice direto por ID e Arvore B+ para indexar a associacao 1:N das perguntas.
 
-3. Perguntas estao vinculadas ao idUsuario como chave estrangeira?
+- [x] Perguntas estao vinculadas ao idUsuario como chave estrangeira?
 Sim. O atributo idUsuario compoe a entidade Pergunta e tem sua existencia confirmada no arquivo de usuarios no momento da gravacao.
 
-4. Ha uma Arvore B+ para o relacionamento 1:N?
+- [x] Ha uma Arvore B+ para o relacionamento 1:N?
 Sim. Implementada com ArvoreBMais<ParIdId>, armazenando a chave composta (idUsuario, idPergunta) e suportando consulta por coringa.
 
-5. O trabalho compila corretamente?
+- [x] O trabalho compila corretamente?
 Sim. Compilacao executada sem erros via javac com charset UTF-8.
 
-6. O trabalho esta completo e sem erros de execucao?
+- [x] O trabalho esta completo e sem erros de execucao?
 Sim. Todos os requisitos e fluxos textuais solicitados no enunciado foram testados e executados com sucesso.
 
-7. O trabalho e original?
+- [x] O trabalho e original?
 Sim. Desenvolvido integralmente pelos membros do grupo.
