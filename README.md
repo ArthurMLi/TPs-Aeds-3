@@ -1,8 +1,7 @@
-RELATORIO DO TRABALHO PRATICO 1 - AEDS III
-SISTEMA: Ajuda Ai 1.0 (Relacionamento 1:N)
+# RELATORIO DO TRABALHO PRATICO 1 - AEDS III
+## SISTEMA: Ajuda Ai 1.0 (Relacionamento 1:N)
 
-
-PARTICIPANTES:
+## PARTICIPANTES:
 - Arthur Mendes Lima
 - Gabriel Teodoro Gomes
 - Jean Carlos Lopes Lellis
@@ -15,9 +14,9 @@ O vídeo demonstrativo com os fluxos operacionais exigidos pelo trabalho está d
 
 1. DESCRICAO DO SISTEMA
 
-O Ajuda Ai 1.0 e um sistema de gestao de forum baseado em terminal que gerencia o ciclo completo de usuarios e perguntas armazenados diretamente em arquivos binarios, sem utilizacao de gerenciadores de banco de dados externos. O foco do projeto e a estruturacao e manipulacao do relacionamento 1:N (um para muitos).
+O Ajuda Ai 1.0 é um sistema de gestão de forum baseado em terminal que gerencia o ciclo completo de usuarios e perguntas armazenados diretamente em arquivos binarios, sem utilização de gerenciadores de banco de dados externos. O foco do projeto é a estruturação e manipulação do relacionamento 1:N (um para muitos).
 
-A aplicacao possui uma arquitetura em camadas bem definida: visao (menus em texto via Console), controle/repositorio (regras de negocio e validacoes) e arquivos (persistencia binaria com indices diretos e indiretos). 
+A aplicação possui uma arquitetura em camadas bem definida: visão (menus em texto via Console), controle/repositorio (regras de negocio e validacoes) e arquivos (persistencia binaria com indices diretos e indiretos). 
 
 Principais recursos:
 - Cadastro e login seguro com hash SHA-256 e e-mails unicos indexados.
