@@ -44,8 +44,6 @@ public class ParDataId implements InterfaceArvoreBMais<ParDataId>{
     public byte[] serialize() throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         DataOutputStream dos = new DataOutputStream(baos);
-        byte[] bytes = new byte[tamanho];
-        dos.write(bytes);
         dos.writeLong(this.data);
         dos.writeInt(this.id);
         return baos.toByteArray();
@@ -66,7 +64,8 @@ public class ParDataId implements InterfaceArvoreBMais<ParDataId>{
 
   @Override
   public int compareTo(ParDataId a) {
-      return Long.compare(this.data, a.data);
+      int comparacaoData = Long.compare(this.data, a.data);
+      return comparacaoData != 0 ? comparacaoData : Integer.compare(this.id, a.id);
   }
 
   @Override

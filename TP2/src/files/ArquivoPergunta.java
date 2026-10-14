@@ -78,6 +78,23 @@ public class ArquivoPergunta extends Arquivo<Pergunta> {
         return resp;
     }
 
+    public Pergunta[] readAllByData() throws Exception {
+        ArrayList<ParDataId> lista = relDataPergunta.read(null);
+        ArrayList<Pergunta> perguntas = new ArrayList<>();
+
+        if (lista != null) {
+            for (int i = lista.size() - 1; i >= 0; i--) {
+                ParDataId indice = lista.get(i);
+                Pergunta pergunta = super.read(indice.getId());
+                if (pergunta != null && pergunta.isAtiva()) {
+                    perguntas.add(pergunta);
+                }
+            }
+        }
+
+        return perguntas.toArray(new Pergunta[0]);
+    }
+
     /**
      * Altera a pergunta e carimba a data/hora de alteracao.
      * O idUsuario e imutavel: se ele pudesse mudar, o par gravado na arvore B+

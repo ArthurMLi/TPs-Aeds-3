@@ -7,15 +7,16 @@ import repository.CrudUsuario;
 /**
  * Menu de mais alto nivel, exibido depois do login.
  *
- * Neste trabalho pratico so a area pessoal esta implementada; a busca por
- * perguntas de outros usuarios entra no proximo TP.
+ * A busca por perguntas e feita pela area publica do sistema.
  */
 public class MenuPrincipal {
 
     private final MenuMinhaArea menuMinhaArea;
+    private final MenuBuscarPerguntas menuBuscarPerguntas;
 
     public MenuPrincipal(CrudUsuario crudUsuario, CrudPergunta crudPergunta) {
         this.menuMinhaArea = new MenuMinhaArea(crudUsuario, crudPergunta);
+        this.menuBuscarPerguntas = new MenuBuscarPerguntas(crudUsuario, crudPergunta);
     }
 
     /** O usuario logado e passado adiante como o "dono" de tudo que for exibido. */
@@ -34,8 +35,7 @@ public class MenuPrincipal {
                     menuMinhaArea.mostrar(usuario);
                     break;
                 case 'B':
-                    Console.erro("A busca por perguntas sera implementada no proximo trabalho pratico.");
-                    Console.pausar();
+                    menuBuscarPerguntas.mostrar(usuario);
                     break;
                 case 'S':
                     Console.mensagem("\nSessao encerrada.");

@@ -100,6 +100,14 @@ public class CrudPergunta {
         return listar(idUsuario);
     }
 
+    public Pergunta[] listarMaisRecentes() {
+        try {
+            return arqPerguntas.readAllByData();
+        } catch (Exception e) {
+            return new Pergunta[0];
+        }
+    }
+
     /** Apenas as perguntas ainda ativas (as arquivadas somem das listagens publicas). */
     public Pergunta[] listarAtivas(int idUsuario) {
         Pergunta[] todas = listar(idUsuario);
