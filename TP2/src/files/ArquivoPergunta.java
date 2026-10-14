@@ -2,6 +2,7 @@ package files;
 
 import aed3.Arquivo;
 import aed3.ArvoreBMais;
+import aed3.ParDataId;
 import aed3.ParIdId;
 import entities.Pergunta;
 import java.util.ArrayList;
@@ -9,6 +10,7 @@ import java.util.ArrayList;
 public class ArquivoPergunta extends Arquivo<Pergunta> {
 
     ArvoreBMais<ParIdId> relUsuarioPergunta;
+    ArvoreBMais<ParDataId> relDataPergunta;
 
     /**
      * Referencia opcional ao arquivo de usuarios, usada apenas para garantir a
@@ -20,10 +22,13 @@ public class ArquivoPergunta extends Arquivo<Pergunta> {
     public ArquivoPergunta() throws Exception {
         super("perguntas", Pergunta.class.getConstructor());
         relUsuarioPergunta = new ArvoreBMais<>(
-            ParIdId.class.getConstructor(),
-            5,
-            "./dados/perguntas/relUsuarioPergunta.db"
-        );
+                ParIdId.class.getConstructor(),
+                5,
+                "./dados/perguntas/relUsuarioPergunta.db");
+        relDataPergunta = new ArvoreBMais<>(
+                ParDataId.class.getConstructor(),
+                5,
+                "./dados/perguntas/relDataPergunta.db");
     }
 
     public void setArquivoUsuario(ArquivoUsuario arqUsuarios) {
@@ -40,11 +45,13 @@ public class ArquivoPergunta extends Arquivo<Pergunta> {
         if (pergunta == null) {
             throw new IllegalArgumentException("Pergunta nao pode ser nula.");
         }
+
         if (arqUsuarios != null && arqUsuarios.read(pergunta.getIdUsuario()) == null) {
             throw new Exception("Usuario " + pergunta.getIdUsuario() + " nao existe.");
         }
         int id = super.create(pergunta);
         relUsuarioPergunta.create(new ParIdId(pergunta.getIdUsuario(), id));
+        relDataPergunta.create(new ParDataId(pergunta.getCriacao(), id));
         return id;
     }
 
@@ -104,18 +111,33 @@ public class ArquivoPergunta extends Arquivo<Pergunta> {
         Pergunta pergunta = super.read(id);
         if (pergunta != null) {
             relUsuarioPergunta.delete(new ParIdId(pergunta.getIdUsuario(), id));
+            relDataPergunta.delete(new ParDataId(pergunta.getCriacao(), id));
+
             return super.delete(id);
         }
         return false;
     }
 
     public void deleteAllByUsuario(int idUsuario) throws Exception {
-        ArrayList<ParIdId> lista = relUsuarioPergunta.read(new ParIdId(idUsuario, -1));
+        ArrayList<ParIdId> lista =
+            relUsuarioPergunta.read(new ParIdId(idUsuario, -1));
+
         if (lista != null) {
-            for (int i = 0; i < lista.size(); i++) {
-                ParIdId par = lista.get(i);
-                super.delete(par.getId2());
-                relUsuarioPergunta.delete(par);
+            for (ParIdId parUsuario : lista) {
+                int idPergunta = parUsuario.getId2();
+
+                // Necessário para descobrir a data usada no índice
+                Pergunta pergunta = super.read(idPergunta);
+
+                if (pergunta != null) {
+                    relDataPergunta.delete(
+                        new ParDataId(pergunta.getCriacao(), idPergunta)
+                    );
+
+                    super.delete(idPergunta);
+                }
+
+                relUsuarioPergunta.delete(parUsuario);
             }
         }
     }
