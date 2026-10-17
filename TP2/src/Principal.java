@@ -1,6 +1,8 @@
 import files.ArquivoPergunta;
+import files.ArquivoResposta;
 import files.ArquivoUsuario;
 import repository.CrudPergunta;
+import repository.CrudResposta;
 import repository.CrudUsuario;
 import view.Console;
 import view.MenuAcesso;
@@ -22,31 +24,38 @@ public class Principal {
     public static void main(String[] args) {
         ArquivoUsuario arqUsuarios = null;
         ArquivoPergunta arqPerguntas = null;
+        ArquivoResposta arqRespostas = null;
 
         try {
             arqUsuarios = new ArquivoUsuario();
             arqPerguntas = new ArquivoPergunta();
+            arqRespostas = new ArquivoResposta();
 
             CrudUsuario crudUsuario = new CrudUsuario(arqUsuarios);
             CrudPergunta crudPergunta = new CrudPergunta(arqPerguntas);
+            CrudResposta crudResposta = new CrudResposta(arqRespostas);
 
             // Liga os dois lados do relacionamento 1:N
             crudPergunta.setArquivoUsuario(arqUsuarios);
             crudUsuario.setArquivoPergunta(arqPerguntas);
+            crudResposta.setArquivoUsuario(arqUsuarios);
+            crudResposta.setArquivoPergunta(arqPerguntas);
 
-            MenuPrincipal menuPrincipal = new MenuPrincipal(crudUsuario, crudPergunta);
+            MenuPrincipal menuPrincipal = new MenuPrincipal(crudUsuario, crudPergunta,
+                    crudResposta);
             new MenuAcesso(crudUsuario, menuPrincipal).mostrar();
 
         } catch (Exception e) {
             Console.erro("Erro fatal: " + e.getMessage());
             e.printStackTrace();
         } finally {
-            fechar(arqUsuarios, arqPerguntas);
+            fechar(arqUsuarios, arqPerguntas, arqRespostas);
         }
     }
 
     /** Fecha os arquivos para garantir que os buffers cheguem ao disco. */
-    private static void fechar(ArquivoUsuario arqUsuarios, ArquivoPergunta arqPerguntas) {
+    private static void fechar(ArquivoUsuario arqUsuarios, ArquivoPergunta arqPerguntas,
+            ArquivoResposta arqRespostas) {
         try {
             if (arqPerguntas != null) {
                 arqPerguntas.close();
@@ -60,6 +69,13 @@ public class Principal {
             }
         } catch (Exception e) {
             Console.erro("Erro ao fechar o arquivo de usuarios: " + e.getMessage());
+        }
+        try {
+            if (arqRespostas != null) {
+                arqRespostas.close();
+            }
+        } catch (Exception e) {
+            Console.erro("Erro ao fechar o arquivo de respostas: " + e.getMessage());
         }
     }
 }

@@ -17,8 +17,7 @@ import java.util.regex.Pattern;
  */
 public class CrudUsuario {
 
-    private static final Pattern EMAIL_VALIDO =
-            Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");
+    private static final Pattern EMAIL_VALIDO = Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");
 
     private final ArquivoUsuario arqUsuarios;
     private ArquivoPergunta arqPerguntas;
@@ -81,7 +80,7 @@ public class CrudUsuario {
      * diferencas de digitacao na hora de recuperar a senha.
      */
     public String criar(String nome, String email, String senha,
-                        String perguntaSecreta, String respostaSecreta) {
+            String perguntaSecreta, String respostaSecreta) {
         String erro = validarDados(nome, email, senha, perguntaSecreta, respostaSecreta);
         if (erro != null) {
             return erro;
@@ -106,7 +105,7 @@ public class CrudUsuario {
     }
 
     private String validarDados(String nome, String email, String senha,
-                                String perguntaSecreta, String respostaSecreta) {
+            String perguntaSecreta, String respostaSecreta) {
         if (nome == null || nome.trim().length() < 4) {
             return "O nome deve ter no minimo 4 caracteres.";
         }
@@ -252,7 +251,8 @@ public class CrudUsuario {
             }
             if (arqPerguntas != null) {
                 return arqUsuarios.delete(idUsuario, arqPerguntas)
-                        ? null : "Nao foi possivel excluir o usuario.";
+                        ? null
+                        : "Nao foi possivel excluir o usuario.";
             }
             return arqUsuarios.delete(idUsuario) ? null : "Nao foi possivel excluir o usuario.";
         } catch (Exception e) {

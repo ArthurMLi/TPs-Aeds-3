@@ -2,6 +2,7 @@ package view;
 
 import entities.Usuario;
 import repository.CrudPergunta;
+import repository.CrudResposta;
 import repository.CrudUsuario;
 
 /**
@@ -14,9 +15,10 @@ public class MenuPrincipal {
     private final MenuMinhaArea menuMinhaArea;
     private final MenuBuscarPerguntas menuBuscarPerguntas;
 
-    public MenuPrincipal(CrudUsuario crudUsuario, CrudPergunta crudPergunta) {
+    public MenuPrincipal(CrudUsuario crudUsuario, CrudPergunta crudPergunta,
+            CrudResposta crudResposta) {
         this.menuMinhaArea = new MenuMinhaArea(crudUsuario, crudPergunta);
-        this.menuBuscarPerguntas = new MenuBuscarPerguntas(crudUsuario, crudPergunta);
+        this.menuBuscarPerguntas = new MenuBuscarPerguntas(crudUsuario, crudPergunta, crudResposta);
     }
 
     /** O usuario logado e passado adiante como o "dono" de tudo que for exibido. */

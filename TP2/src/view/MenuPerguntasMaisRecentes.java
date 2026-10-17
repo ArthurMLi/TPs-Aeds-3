@@ -1,14 +1,17 @@
 package view;
 
 import entities.Pergunta;
+import entities.Resposta;
 import entities.Usuario;
 import repository.CrudPergunta;
+import repository.CrudResposta;
 import repository.CrudUsuario;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 
 public class MenuPerguntasMaisRecentes {
 
@@ -18,10 +21,13 @@ public class MenuPerguntasMaisRecentes {
 
     private final CrudPergunta crudPergunta;
     private final CrudUsuario crudUsuario;
+    private final MenuResposta menuResposta;
 
-    public MenuPerguntasMaisRecentes(CrudUsuario crudUsuario, CrudPergunta crudPergunta) {
+    public MenuPerguntasMaisRecentes(CrudUsuario crudUsuario, CrudPergunta crudPergunta,
+            CrudResposta crudResposta) {
         this.crudUsuario = crudUsuario;
         this.crudPergunta = crudPergunta;
+        this.menuResposta = new MenuResposta(crudUsuario, crudResposta);
     }
 
     public void mostrar(Usuario usuario) {
@@ -60,7 +66,7 @@ public class MenuPerguntasMaisRecentes {
                 try {
                     int numero = Integer.parseInt(entrada);
                     if (numero >= 1 && numero <= fim - inicio) {
-                        mostrarPergunta(perguntas[inicio + numero - 1]);
+                        mostrarPergunta(perguntas[inicio + numero - 1], usuario);
                     } else {
                         Console.opcaoInvalida();
                     }
@@ -80,7 +86,7 @@ public class MenuPerguntasMaisRecentes {
         Console.mensagem("");
     }
 
-    private void mostrarPergunta(Pergunta pergunta) {
+    private void mostrarPergunta(Pergunta pergunta, Usuario usuario) {
         Usuario autor = crudUsuario.buscarPorId(pergunta.getIdUsuario());
         String nomeAutor = autor == null ? "Usuario desconhecido" : autor.getNome();
 
@@ -90,12 +96,45 @@ public class MenuPerguntasMaisRecentes {
         Console.mensagem("");
         Console.mensagem("RESPOSTAS");
         Console.mensagem("---------");
-        Console.mensagem("As respostas serao implementadas no proximo trabalho pratico.");
-        Console.mensagem("");
-        Console.mensagem("(R) Retornar");
-        while (!Console.lerLinha("Opcao: ").equalsIgnoreCase("R")) {
-            Console.opcaoInvalida();
+        ArrayList<Resposta> respostas = menuResposta.listarPorPergunta(pergunta.getId());
+        for (int i = 0; i < respostas.size(); i++) {
+            imprimirResumoResposta(i + 1, respostas.get(i));
         }
+        if (respostas.isEmpty()) {
+            Console.mensagem("Esta pergunta ainda nao possui respostas.");
+        }
+        Console.mensagem("");
+        Console.mensagem("(A) Responder a pergunta");
+        Console.mensagem("(R) Retornar");
+        String entrada;
+        do {
+            entrada = Console.lerLinha("Opcao: ");
+            if (entrada.equalsIgnoreCase("A")) {
+                menuResposta.responder(pergunta, usuario);
+            } else if (!entrada.equalsIgnoreCase("R")) {
+                try {
+                    int numero = Integer.parseInt(entrada);
+                    if (numero >= 1 && numero <= respostas.size()) {
+                        menuResposta.mostrar(pergunta, respostas.get(numero - 1), usuario);
+                    } else {
+                        Console.opcaoInvalida();
+                    }
+                } catch (NumberFormatException e) {
+                    Console.opcaoInvalida();
+                }
+            }
+        } while (!entrada.equalsIgnoreCase("R"));
+    }
+
+    private void imprimirResumoResposta(int numero, Resposta resposta) {
+        Usuario autor = crudUsuario.buscarPorId(resposta.getIdUsuario());
+        String nomeAutor = autor == null ? "Usuario desconhecido" : autor.getNome();
+        Console.mensagem("(" + numero + ") " + resposta.getResposta());
+        Console.mensagem("Respondido por " + nomeAutor + " em "
+                + formatarData(resposta.getCriacao()));
+        Console.mensagem("Nota: " + resposta.getNota() + "  ("
+                + resposta.getAvaliacoes() + " avaliacoes)");
+        Console.mensagem("");
     }
 
     private String formatarData(long milissegundos) {

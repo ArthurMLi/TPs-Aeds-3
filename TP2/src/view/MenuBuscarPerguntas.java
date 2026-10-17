@@ -2,6 +2,7 @@ package view;
 
 import entities.Usuario;
 import repository.CrudPergunta;
+import repository.CrudResposta;
 import repository.CrudUsuario;
 
 public class MenuBuscarPerguntas {
@@ -9,10 +10,11 @@ public class MenuBuscarPerguntas {
     private final CrudUsuario crudUsuario;
     private final MenuPerguntasMaisRecentes menuPerguntasMaisRecentes;
 
-    public MenuBuscarPerguntas(CrudUsuario crudUsuario, CrudPergunta crudPergunta) {
+    public MenuBuscarPerguntas(CrudUsuario crudUsuario, CrudPergunta crudPergunta,
+            CrudResposta crudResposta) {
         this.crudUsuario = crudUsuario;
         this.menuPerguntasMaisRecentes =
-                new MenuPerguntasMaisRecentes(crudUsuario, crudPergunta);
+                new MenuPerguntasMaisRecentes(crudUsuario, crudPergunta, crudResposta);
     }
 
     public void mostrar(Usuario usuario) {
