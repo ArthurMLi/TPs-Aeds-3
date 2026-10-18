@@ -28,7 +28,7 @@ public class ArquivoResposta extends Arquivo<Resposta> {
         relUsuarioResposta = new ArvoreBMais<>(
                 ParIdId.class.getConstructor(),
                 5,
-                "./dados/respostas/relUsuarioPPergunta.db");
+                "./dados/respostas/relUsuarioResposta.db");
     }
 
     public void setArquivoUsuario(ArquivoUsuario arqUsuarios) {
