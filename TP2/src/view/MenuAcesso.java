@@ -22,7 +22,7 @@ public class MenuAcesso {
         do {
             Console.cabecalho(null);
             Console.mensagem("(A) Login");
-            Console.mensagem("(B) Novo usuario (primeiro acesso)");
+            Console.mensagem("(B) Novo usuário (primeiro acesso)");
             Console.mensagem("(S) Sair");
             Console.mensagem("");
             opcao = Console.lerOpcao();
@@ -35,7 +35,7 @@ public class MenuAcesso {
                     novoUsuario();
                     break;
                 case 'S':
-                    Console.mensagem("\nAte logo!");
+                    Console.mensagem("\nAté logo!");
                     break;
                 default:
                     Console.opcaoInvalida();
@@ -93,7 +93,7 @@ public class MenuAcesso {
      * "sao paulo" e "SAO PAULO" sao aceitas igualmente.
      */
     private void recuperarSenha(String emailSugerido) {
-        Console.cabecalho("Recuperacao de senha");
+        Console.cabecalho("Recuperação de senha");
 
         String email = emailSugerido;
         if (email == null || email.isEmpty()) {
@@ -107,7 +107,7 @@ public class MenuAcesso {
 
         Usuario usuario = crudUsuario.buscarPorEmail(email);
         if (usuario == null) {
-            Console.erro("Usuario nao encontrado.");
+            Console.erro("Usuário não encontrado.");
             Console.pausar();
             return;
         }
@@ -129,7 +129,7 @@ public class MenuAcesso {
         }
         String confirmacao = Console.lerTexto("Confirme a nova senha: ", 1);
         if (confirmacao == null || !nova.equals(confirmacao)) {
-            Console.erro("As senhas nao conferem.");
+            Console.erro("As senhas não conferem.");
             Console.pausar();
             return;
         }
@@ -139,7 +139,7 @@ public class MenuAcesso {
         if (erro != null) {
             Console.erro(erro);
         } else {
-            Console.sucesso("Senha alterada. Faca o login com a nova senha.");
+            Console.sucesso("Senha alterada. Faça o login com a nova senha.");
         }
         Console.pausar();
     }
@@ -153,7 +153,7 @@ public class MenuAcesso {
      * acesso: se ja existir, nao faz sentido pedir o resto dos dados.
      */
     private void novoUsuario() {
-        Console.cabecalho("Novo usuario");
+        Console.cabecalho("Novo usuário");
 
         String email;
         while (true) {
@@ -162,11 +162,11 @@ public class MenuAcesso {
                 return;
             }
             if (!CrudUsuario.emailValido(email)) {
-                Console.erro("E-mail invalido. Informe um e-mail no formato nome@dominio.com.");
+                Console.erro("E-mail inválido. Informe um e-mail no formato nome@dominio.com.");
                 continue;
             }
             if (crudUsuario.emailJaCadastrado(email)) {
-                Console.erro("Este e-mail ja esta cadastrado. Informe outro.");
+                Console.erro("Este e-mail já está cadastrado. Informe outro.");
                 continue;
             }
             break;
@@ -180,7 +180,7 @@ public class MenuAcesso {
         if (senha == null) {
             return;
         }
-        Console.mensagem("\nA pergunta secreta sera usada para recuperar a senha.");
+        Console.mensagem("\nA pergunta secreta será usada para recuperar a senha.");
         String pergunta = Console.lerTexto("Pergunta secreta (min. 4 caracteres, ENTER cancela): ", 4);
         if (pergunta == null) {
             return;
@@ -200,7 +200,7 @@ public class MenuAcesso {
         if (erro != null) {
             Console.erro(erro);
         } else {
-            Console.sucesso("Usuario cadastrado. Faca o login para acessar o sistema.");
+            Console.sucesso("Usuário cadastrado. Faça o login para acessar o sistema.");
         }
         Console.pausar();
     }

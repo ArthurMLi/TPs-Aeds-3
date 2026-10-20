@@ -4,6 +4,7 @@ import aed3.Arquivo;
 import aed3.ArvoreBMais;
 import aed3.ParIdId;
 import entities.Avaliacao;
+import entities.Resposta;
 import java.util.ArrayList;
 
 public class ArquivoAvaliacao extends Arquivo<Avaliacao> {
@@ -149,6 +150,11 @@ public class ArquivoAvaliacao extends Arquivo<Avaliacao> {
         }
     }
 
+    /**
+     * Exclui todas as avaliacoes feitas por um usuario. Como as respostas
+     * avaliadas continuam existindo, a nota e o numero de avaliacoes de cada
+     * uma sao revertidos antes de a avaliacao ser apagada.
+     */
     public void deleteAllByUsuario(int idUsuario) throws Exception {
         ArrayList<ParIdId> lista = relUsuarioAvaliacao.read(new ParIdId(idUsuario, -1));
         if (lista != null) {
@@ -156,6 +162,17 @@ public class ArquivoAvaliacao extends Arquivo<Avaliacao> {
                 int idAvaliacao = parUsuario.getId2();
                 Avaliacao avaliacao = super.read(idAvaliacao);
                 if (avaliacao != null) {
+                    if (arqRespostas != null) {
+                        Resposta resposta = arqRespostas.read(avaliacao.getIdResposta());
+                        if (resposta != null) {
+                            resposta.setNota((short) (resposta.getNota()
+                                    - (avaliacao.isAvaliacao() ? 1 : -1)));
+                            if (resposta.getAvaliacoes() > 0) {
+                                resposta.setAvaliacoes((short) (resposta.getAvaliacoes() - 1));
+                            }
+                            arqRespostas.update(resposta);
+                        }
+                    }
                     relRespostaAvaliacao.delete(new ParIdId(avaliacao.getIdResposta(), idAvaliacao));
                     super.delete(idAvaliacao);
                 }

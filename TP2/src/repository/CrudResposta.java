@@ -65,6 +65,15 @@ public class CrudResposta {
             return "O texto da resposta nao pode ser vazio.";
         }
         try {
+            if (arqPerguntas != null) {
+                Pergunta pergunta = arqPerguntas.read(idPergunta);
+                if (pergunta == null) {
+                    return "Pergunta nao encontrada.";
+                }
+                if (!pergunta.isAtiva()) {
+                    return "Esta pergunta esta arquivada e nao aceita novas respostas.";
+                }
+            }
             arqRespostas.create(new Resposta(idPergunta, idUsuario, texto.trim()));
             return null;
         } catch (Exception e) {
@@ -98,7 +107,7 @@ public class CrudResposta {
      * Devolve as respostas ativas de uma pergunta, ordenadas por nota decrescente
      * e, em caso de empate, por data de criacao.
      */
-    public ArrayList<Resposta> listarPorResposta(int idPergunta) {
+    public ArrayList<Resposta> listarPorPergunta(int idPergunta) {
         try {
             ArrayList<Resposta> respostas = arqRespostas.readAllByPergunta(idPergunta);
             respostas = filtrarAtivas(respostas);

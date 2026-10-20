@@ -19,6 +19,14 @@ public class ArquivoPergunta extends Arquivo<Pergunta> {
      */
     private ArquivoUsuario arqUsuarios;
 
+    /**
+     * Referencia ao arquivo de respostas, usada na exclusao fisica: apagar uma
+     * pergunta apaga em cascata as respostas dela (e as avaliacoes dessas
+     * respostas), para que a arvore (idPergunta, idResposta) nao fique com
+     * pares apontando para uma pergunta que nao existe mais.
+     */
+    private ArquivoResposta arqRespostas;
+
     public ArquivoPergunta() throws Exception {
         super("perguntas", Pergunta.class.getConstructor());
         relUsuarioPergunta = new ArvoreBMais<>(
@@ -35,10 +43,15 @@ public class ArquivoPergunta extends Arquivo<Pergunta> {
         this.arqUsuarios = arqUsuarios;
     }
 
+    public void setArquivoResposta(ArquivoResposta arqRespostas) {
+        this.arqRespostas = arqRespostas;
+    }
+
     /**
-     * Inclui a pergunta no arquivo de dados e registra o par
-     * (idUsuario, idPergunta) na arvore B+, que e o que permite responder
-     * "quais sao as perguntas deste usuario" sem varrer o arquivo inteiro.
+     * Inclui a pergunta no arquivo de dados e registra os pares nas duas
+     * arvores B+: (idUsuario, idPergunta), que responde "quais sao as perguntas
+     * deste usuario", e (criacao, idPergunta), que mantem as perguntas em ordem
+     * de data para a listagem das mais recentes.
      */
     @Override
     public int create(Pergunta pergunta) throws Exception {
@@ -78,6 +91,11 @@ public class ArquivoPergunta extends Arquivo<Pergunta> {
         return resp;
     }
 
+    /**
+     * Devolve as perguntas ativas em ordem decrescente de data de criacao.
+     * A arvore (criacao, idPergunta) ja guarda os pares em ordem crescente;
+     * basta percorrer a lista lida dela de tras para frente.
+     */
     public Pergunta[] readAllByData() throws Exception {
         ArrayList<ParDataId> lista = relDataPergunta.read(null);
         ArrayList<Pergunta> perguntas = new ArrayList<>();
@@ -127,6 +145,9 @@ public class ArquivoPergunta extends Arquivo<Pergunta> {
     public boolean delete(int id) throws Exception {
         Pergunta pergunta = super.read(id);
         if (pergunta != null) {
+            if (arqRespostas != null) {
+                arqRespostas.deleteAllByPergunta(id);
+            }
             relUsuarioPergunta.delete(new ParIdId(pergunta.getIdUsuario(), id));
             relDataPergunta.delete(new ParDataId(pergunta.getCriacao(), id));
 
@@ -147,6 +168,9 @@ public class ArquivoPergunta extends Arquivo<Pergunta> {
                 Pergunta pergunta = super.read(idPergunta);
 
                 if (pergunta != null) {
+                    if (arqRespostas != null) {
+                        arqRespostas.deleteAllByPergunta(idPergunta);
+                    }
                     relDataPergunta.delete(
                         new ParDataId(pergunta.getCriacao(), idPergunta)
                     );

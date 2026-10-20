@@ -1,7 +1,9 @@
 package repository;
 
 import entities.Usuario;
+import files.ArquivoAvaliacao;
 import files.ArquivoPergunta;
+import files.ArquivoResposta;
 import files.ArquivoUsuario;
 import util.Crypto;
 
@@ -21,6 +23,8 @@ public class CrudUsuario {
 
     private final ArquivoUsuario arqUsuarios;
     private ArquivoPergunta arqPerguntas;
+    private ArquivoResposta arqRespostas;
+    private ArquivoAvaliacao arqAvaliacoes;
 
     public CrudUsuario() throws Exception {
         this.arqUsuarios = new ArquivoUsuario();
@@ -33,6 +37,16 @@ public class CrudUsuario {
     /** Permite a exclusao em cascata das perguntas quando o usuario e excluido. */
     public void setArquivoPergunta(ArquivoPergunta arqPerguntas) {
         this.arqPerguntas = arqPerguntas;
+    }
+
+    /** Permite a exclusao em cascata das respostas quando o usuario e excluido. */
+    public void setArquivoResposta(ArquivoResposta arqRespostas) {
+        this.arqRespostas = arqRespostas;
+    }
+
+    /** Permite a exclusao em cascata das avaliacoes quando o usuario e excluido. */
+    public void setArquivoAvaliacao(ArquivoAvaliacao arqAvaliacoes) {
+        this.arqAvaliacoes = arqAvaliacoes;
     }
 
     public ArquivoUsuario getArquivoUsuario() {
@@ -237,11 +251,11 @@ public class CrudUsuario {
     // ------------------------------------------------------------------
 
     /**
-     * Exclui o usuario. Como o relacionamento e 1:N e as perguntas dependem do
-     * usuario, a exclusao e em cascata: primeiro as perguntas (arquivo de dados
-     * e arvore B+), depois o usuario (arquivo de dados e indice de email).
-     * Apagar o usuario primeiro deixaria perguntas orfas apontando para um ID
-     * que nao existe mais.
+     * Exclui o usuario. Perguntas, respostas e avaliacoes dependem dele, entao a
+     * exclusao e em cascata: primeiro as avaliacoes que ele fez, depois as
+     * respostas que escreveu, depois as perguntas (com as respostas a elas) e,
+     * por fim, o usuario (arquivo de dados e indice de email). Apagar o usuario
+     * primeiro deixaria registros orfaos apontando para um ID que nao existe.
      */
     public String excluir(int idUsuario) {
         try {
@@ -249,12 +263,9 @@ public class CrudUsuario {
             if (usuario == null) {
                 return "Usuario nao encontrado.";
             }
-            if (arqPerguntas != null) {
-                return arqUsuarios.delete(idUsuario, arqPerguntas)
-                        ? null
-                        : "Nao foi possivel excluir o usuario.";
-            }
-            return arqUsuarios.delete(idUsuario) ? null : "Nao foi possivel excluir o usuario.";
+            return arqUsuarios.delete(idUsuario, arqPerguntas, arqRespostas, arqAvaliacoes)
+                    ? null
+                    : "Nao foi possivel excluir o usuario.";
         } catch (Exception e) {
             return "Nao foi possivel excluir o usuario: " + e.getMessage();
         }

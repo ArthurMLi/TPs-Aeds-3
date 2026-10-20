@@ -1,187 +1,191 @@
 package view;
 
 import entities.Pergunta;
+import entities.Resposta;
 import entities.Usuario;
+import repository.CrudAvaliacao;
 import repository.CrudPergunta;
+import repository.CrudResposta;
+import repository.CrudUsuario;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 
 /**
- * Gestao das perguntas do usuario logado: listar, incluir, alterar e arquivar.
+ * Gestao das perguntas do usuario logado.
  *
- * A listagem e numerada sequencialmente na tela e os IDs reais nunca sao
- * exibidos, porque sao de uso interno do sistema. Como a interface e textual e
- * o usuario nao pode "clicar" numa pergunta, a tela guarda um vetor que associa
- * o numero mostrado ao ID real, e e esse vetor que traduz a escolha do usuario
- * nas operacoes de alteracao e arquivamento.
+ * Exibe a lista de perguntas do usuario e, ao selecionar uma, apresenta os dados
+ * completos da pergunta e as respostas associadas, permitindo alterar/arquivar a
+ * pergunta ou moderar/arquivar respostas inadequadas.
  */
 public class MenuPerguntas {
 
-    private static final DateTimeFormatter FORMATO =
+    private static final DateTimeFormatter FORMATO_PERGUNTA =
             DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+    private static final DateTimeFormatter FORMATO_RESPOSTA =
+            DateTimeFormatter.ofPattern("dd/MM/yyyy 'as' HH:mm");
 
+    private final CrudUsuario crudUsuario;
     private final CrudPergunta crudPergunta;
+    private final CrudResposta crudResposta;
+    private final MenuResposta menuResposta;
+
+    public MenuPerguntas(CrudUsuario crudUsuario, CrudPergunta crudPergunta,
+            CrudResposta crudResposta) {
+        this(crudUsuario, crudPergunta, crudResposta, null);
+    }
+
+    public MenuPerguntas(CrudUsuario crudUsuario, CrudPergunta crudPergunta,
+            CrudResposta crudResposta, CrudAvaliacao crudAvaliacao) {
+        this.crudUsuario = crudUsuario;
+        this.crudPergunta = crudPergunta;
+        this.crudResposta = crudResposta;
+        this.menuResposta = new MenuResposta(crudUsuario, crudResposta, crudAvaliacao);
+    }
 
     public MenuPerguntas(CrudPergunta crudPergunta) {
-        this.crudPergunta = crudPergunta;
+        this(null, crudPergunta, null);
     }
 
     public void mostrar(Usuario usuario) {
-        char opcao;
+        String entrada;
         do {
-            Console.cabecalho("Inicio > Minha area > Minhas perguntas");
-            Console.mensagem("(A) Listar");
-            Console.mensagem("(B) Incluir");
-            Console.mensagem("(C) Alterar");
-            Console.mensagem("(D) Arquivar");
-            Console.mensagem("(R) Retornar ao menu anterior");
-            Console.mensagem("");
-            opcao = Console.lerOpcao();
+            Console.cabecalho("Início > Minha área > Minhas perguntas");
+            Pergunta[] perguntas = crudPergunta.listar(usuario.getId());
 
-            switch (opcao) {
-                case 'A':
-                    listar(usuario);
-                    Console.pausar();
-                    break;
-                case 'B':
-                    incluir(usuario);
-                    break;
-                case 'C':
-                    alterar(usuario);
-                    break;
-                case 'D':
-                    arquivar(usuario);
-                    break;
-                case 'R':
-                    break;
-                default:
-                    Console.opcaoInvalida();
+            if (perguntas.length == 0) {
+                Console.mensagem("Você ainda não cadastrou nenhuma pergunta.");
+            } else {
+                for (int i = 0; i < perguntas.length; i++) {
+                    Pergunta p = perguntas[i];
+                    String estado = p.isAtiva() ? "" : "[ARQUIVADA] ";
+                    Console.mensagem("(" + (i + 1) + ") " + estado + formatarData(p.getCriacao(), FORMATO_PERGUNTA));
+                    Console.mensagem("    " + p.getPergunta());
+                    Console.mensagem("    Palavras-chave: " + p.getPalavrasChave());
+                    Console.mensagem("");
+                }
             }
-        } while (opcao != 'R');
-    }
 
-    // ------------------------------------------------------------------
-    // Listagem
-    // ------------------------------------------------------------------
-
-    /**
-     * Busca as perguntas do usuario pela arvore B+ e as imprime numeradas.
-     * Devolve o vetor de perguntas na mesma ordem em que foram exibidas, para
-     * que o numero (i + 1) da tela corresponda a posicao i do vetor.
-     */
-    private Pergunta[] listar(Usuario usuario) {
-        Pergunta[] perguntas = crudPergunta.listar(usuario.getId());
-
-        Console.mensagem("\nMINHAS PERGUNTAS");
-        Console.mensagem("");
-        if (perguntas.length == 0) {
-            Console.mensagem("Voce ainda nao cadastrou nenhuma pergunta.");
-            return perguntas;
-        }
-
-        for (int i = 0; i < perguntas.length; i++) {
-            Pergunta p = perguntas[i];
-            String estado = p.isAtiva() ? "" : "ARQUIVADA ";
-            Console.mensagem("(" + (i + 1) + ") " + estado + formatarData(p.getCriacao()));
-            Console.mensagem(p.getPergunta());
-            Console.mensagem("Palavras chave: " + p.getPalavrasChave());
             Console.mensagem("");
-        }
-        return perguntas;
+            Console.mensagem("(A) Incluir nova pergunta");
+            Console.mensagem("(R) Retornar ao menu anterior");
+            entrada = Console.lerLinha("Opcao: ");
+
+            if (entrada.equalsIgnoreCase("A") || entrada.equalsIgnoreCase("I") || entrada.equalsIgnoreCase("B")) {
+                incluir(usuario);
+            } else if (!entrada.equalsIgnoreCase("R") && !entrada.isEmpty()) {
+                try {
+                    int numero = Integer.parseInt(entrada);
+                    if (numero >= 1 && numero <= perguntas.length) {
+                        mostrarPergunta(perguntas[numero - 1], usuario);
+                    } else {
+                        Console.opcaoInvalida();
+                    }
+                } catch (NumberFormatException e) {
+                    Console.opcaoInvalida();
+                }
+            }
+        } while (!entrada.equalsIgnoreCase("R"));
     }
 
-    private String formatarData(long milissegundos) {
-        return LocalDateTime
-                .ofInstant(Instant.ofEpochMilli(milissegundos), ZoneId.systemDefault())
-                .format(FORMATO);
+    private void mostrarPergunta(Pergunta pergunta, Usuario usuario) {
+        String entrada;
+        do {
+            Pergunta atual = crudPergunta.ler(pergunta.getId());
+            if (atual != null) {
+                pergunta = atual;
+            }
+
+            Console.cabecalho("Início > Minha área > Minhas perguntas > Pergunta");
+            Console.mensagem(formatarData(pergunta.getCriacao(), FORMATO_PERGUNTA));
+            Console.mensagem(pergunta.getPergunta());
+            Console.mensagem("Palavras chave: " + pergunta.getPalavrasChave());
+            if (!pergunta.isAtiva()) {
+                Console.mensagem("[Esta pergunta está ARQUIVADA]");
+            }
+            Console.mensagem("");
+            Console.mensagem("RESPOSTAS");
+            Console.mensagem("---------");
+
+            ArrayList<Resposta> respostas = menuResposta.listarPorPergunta(pergunta.getId());
+            if (respostas.isEmpty()) {
+                Console.mensagem("Esta pergunta ainda não possui respostas.");
+            } else {
+                for (int i = 0; i < respostas.size(); i++) {
+                    imprimirResumoResposta(i + 1, respostas.get(i));
+                }
+            }
+
+            Console.mensagem("");
+            Console.mensagem("(A) Alterar dados da pergunta");
+            Console.mensagem("(B) Arquivar pergunta");
+            Console.mensagem("(R) Retornar");
+            entrada = Console.lerLinha("Opcao: ");
+
+            if (entrada.equalsIgnoreCase("A")) {
+                alterar(pergunta, usuario);
+            } else if (entrada.equalsIgnoreCase("B")) {
+                if (arquivar(pergunta, usuario)) {
+                    return;
+                }
+            } else if (!entrada.equalsIgnoreCase("R") && !entrada.isEmpty()) {
+                try {
+                    int numero = Integer.parseInt(entrada);
+                    if (numero >= 1 && numero <= respostas.size()) {
+                        menuResposta.mostrar("Início > Minha área > Minhas perguntas > Pergunta > Resposta",
+                            pergunta, respostas.get(numero - 1), usuario, true);
+                    } else {
+                        Console.opcaoInvalida();
+                    }
+                } catch (NumberFormatException e) {
+                    Console.opcaoInvalida();
+                }
+            }
+        } while (!entrada.equalsIgnoreCase("R"));
     }
 
-    /**
-     * Lista as perguntas e pede que o usuario escolha uma pelo numero da tela.
-     * Devolve a pergunta escolhida, ou null se nao houver perguntas ou se o
-     * usuario cancelar.
-     */
-    private Pergunta escolher(Usuario usuario, String acao) {
-        Pergunta[] perguntas = listar(usuario);
-        if (perguntas.length == 0) {
-            Console.pausar();
-            return null;
-        }
-
-        String entrada = Console.lerTexto("Numero da pergunta a " + acao + " (ENTER cancela): ", 1);
-        if (entrada == null) {
-            return null;
-        }
-
-        int numero;
-        try {
-            numero = Integer.parseInt(entrada);
-        } catch (NumberFormatException e) {
-            Console.erro("Informe um numero valido.");
-            Console.pausar();
-            return null;
-        }
-        if (numero < 1 || numero > perguntas.length) {
-            Console.erro("Nao existe pergunta com esse numero.");
-            Console.pausar();
-            return null;
-        }
-        // Traducao do numero exibido para o ID real da pergunta
-        return perguntas[numero - 1];
+    private void imprimirResumoResposta(int numero, Resposta resposta) {
+        Usuario autor = crudUsuario == null ? null : crudUsuario.buscarPorId(resposta.getIdUsuario());
+        String nomeAutor = autor == null ? "Usuário desconhecido" : autor.getNome();
+        Console.mensagem("(" + numero + ") " + resposta.getResposta());
+                Console.mensagem("Respondido por " + nomeAutor + " em "
+                + formatarData(resposta.getCriacao(), FORMATO_RESPOSTA));
+        Console.mensagem("Nota: " + resposta.getNota() + "  ("
+                + resposta.getAvaliacoes() + " avaliações)");
+        Console.mensagem("");
     }
 
-    // ------------------------------------------------------------------
-    // Inclusao
-    // ------------------------------------------------------------------
-
-    /**
-     * O usuario informa somente o texto e as palavras-chave. O idUsuario vem de
-     * quem esta logado, as datas vem do relogio e a nota comeca em zero.
-     */
     private void incluir(Usuario usuario) {
-        Console.cabecalho("Inicio > Minha area > Minhas perguntas > Incluir");
+        Console.cabecalho("Início > Minha área > Minhas perguntas > Incluir");
         String texto = Console.lerTexto("Pergunta (ENTER cancela): ", 1);
         if (texto == null) {
             return;
         }
-        Console.mensagem("Separe as palavras-chave por ponto-e-virgula. Ex.: pao;mofado;saude");
+        Console.mensagem("Separe as palavras-chave por ponto e vírgula. Ex.: pão;mofado;saúde");
         String palavras = Console.lerTexto("Palavras-chave (ENTER cancela): ", 1);
         if (palavras == null) {
             return;
         }
-        if (!Console.confirmar("\nConfirma a inclusao da pergunta?")) {
-            Console.mensagem("Inclusao cancelada.");
+        if (!Console.confirmar("\nConfirma a inclusão da pergunta?")) {
+            Console.mensagem("Inclusão cancelada.");
             Console.pausar();
             return;
         }
         relatar(crudPergunta.incluir(usuario.getId(), texto, palavras), "Pergunta incluida.");
     }
 
-    // ------------------------------------------------------------------
-    // Alteracao
-    // ------------------------------------------------------------------
-
-    /**
-     * Permite alterar o texto e as palavras-chave. Campos deixados em branco
-     * permanecem como estavam. A data de alteracao e ajustada automaticamente
-     * pelo ArquivoPergunta.
-     */
-    private void alterar(Usuario usuario) {
-        Console.cabecalho("Inicio > Minha area > Minhas perguntas > Alterar");
-        Pergunta pergunta = escolher(usuario, "alterar");
-        if (pergunta == null) {
-            return;
-        }
+    private void alterar(Pergunta pergunta, Usuario usuario) {
+        Console.cabecalho("Início > Minha área > Minhas perguntas > Alterar");
         if (!pergunta.isAtiva()) {
-            Console.erro("Uma pergunta arquivada nao pode ser alterada.");
+            Console.erro("Uma pergunta arquivada não pode ser alterada.");
             Console.pausar();
             return;
         }
 
-        Console.mensagem("\nDeixe em branco para manter o valor atual.");
+            Console.mensagem("\nDeixe em branco para manter o valor atual.");
         Console.mensagem("\nPergunta atual: " + pergunta.getPergunta());
         String texto = Console.lerLinha("Nova pergunta: ");
         Console.mensagem("\nPalavras-chave atuais: " + pergunta.getPalavrasChave());
@@ -192,8 +196,8 @@ public class MenuPerguntas {
             Console.pausar();
             return;
         }
-        if (!Console.confirmar("\nConfirma a alteracao?")) {
-            Console.mensagem("Alteracao cancelada.");
+        if (!Console.confirmar("\nConfirma a alteração?")) {
+            Console.mensagem("Alteração cancelada.");
             Console.pausar();
             return;
         }
@@ -201,35 +205,31 @@ public class MenuPerguntas {
                 "Pergunta alterada.");
     }
 
-    // ------------------------------------------------------------------
-    // Arquivamento
-    // ------------------------------------------------------------------
-
-    /**
-     * Arquivar nao e excluir: o registro continua no arquivo e nos indices,
-     * apenas com ativa = false, porque respostas e votos de outros usuarios
-     * dependem dele. A operacao e definitiva.
-     */
-    private void arquivar(Usuario usuario) {
-        Console.cabecalho("Inicio > Minha area > Minhas perguntas > Arquivar");
-        Pergunta pergunta = escolher(usuario, "arquivar");
-        if (pergunta == null) {
-            return;
-        }
+    private boolean arquivar(Pergunta pergunta, Usuario usuario) {
+        Console.cabecalho("Início > Minha área > Minhas perguntas > Arquivar");
         if (!pergunta.isAtiva()) {
-            Console.erro("Esta pergunta ja esta arquivada.");
+            Console.erro("Esta pergunta já está arquivada.");
             Console.pausar();
-            return;
+            return false;
         }
 
         Console.mensagem("\nPergunta: " + pergunta.getPergunta());
-        Console.mensagem("O arquivamento e definitivo: nao sera possivel desarquivar.");
+        Console.mensagem("O arquivamento é definitivo: não será possível desarquivar.");
         if (!Console.confirmar("Confirma o arquivamento?")) {
             Console.mensagem("Arquivamento cancelado.");
             Console.pausar();
-            return;
+            return false;
         }
-        relatar(crudPergunta.arquivar(pergunta.getId(), usuario.getId()), "Pergunta arquivada.");
+        String erro = crudPergunta.arquivar(pergunta.getId(), usuario.getId());
+        if (erro == null) {
+            Console.sucesso("Pergunta arquivada.");
+            Console.pausar();
+            return true;
+        } else {
+            Console.erro(erro);
+            Console.pausar();
+            return false;
+        }
     }
 
     private void relatar(String erro, String mensagemDeSucesso) {
@@ -239,5 +239,11 @@ public class MenuPerguntas {
             Console.sucesso(mensagemDeSucesso);
         }
         Console.pausar();
+    }
+
+    private String formatarData(long milissegundos, DateTimeFormatter formato) {
+        return LocalDateTime.ofInstant(
+                Instant.ofEpochMilli(milissegundos),
+                ZoneId.systemDefault()).format(formato);
     }
 }
