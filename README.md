@@ -132,7 +132,7 @@ O sistema segue a organização estrita em três camadas:
 
 * **Persistência (`files`)**: Estende o CRUD genérico em arquivo binário e sincroniza os índices diretos e secundários.
 
-
+```
 
 TP2/src/
 
