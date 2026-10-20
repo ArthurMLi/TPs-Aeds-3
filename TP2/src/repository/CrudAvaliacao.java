@@ -95,7 +95,7 @@ public class CrudAvaliacao {
      * Cancela uma avaliacao existente realizada pelo usuario, revertendo o impacto
      * na nota e decrementando o numero de avaliacoes da resposta correspondente.
      */
-    public String cancelar(int idAvaliacao, int idUsuario) {
+    public String cancelar(int idAvaliacao, int idUsuario) { //############################
         try {
             Avaliacao avaliacao = arqAvaliacoes.read(idAvaliacao);
             if (avaliacao == null) {

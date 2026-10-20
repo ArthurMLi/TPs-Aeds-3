@@ -62,7 +62,7 @@ public class ArquivoResposta extends Arquivo<Resposta> {
      * (idPergunta, idResposta) e (idUsuario, idResposta) nas duas arvores B+.
      */
     @Override
-    public int create(Resposta resposta) throws Exception {
+    public int create(Resposta resposta) throws Exception { //##########################################
         if (resposta == null) {
             throw new IllegalArgumentException("Resposta nao pode ser nula.");
         }

@@ -96,8 +96,8 @@ public class ArquivoPergunta extends Arquivo<Pergunta> {
      * A arvore (criacao, idPergunta) ja guarda os pares em ordem crescente;
      * basta percorrer a lista lida dela de tras para frente.
      */
-    public Pergunta[] readAllByData() throws Exception {
-        ArrayList<ParDataId> lista = relDataPergunta.read(null);
+    public Pergunta[] readAllByData() throws Exception {//##################
+        ArrayList<ParDataId> lista = relDataPergunta.read(null); //################
         ArrayList<Pergunta> perguntas = new ArrayList<>();
 
         if (lista != null) {
