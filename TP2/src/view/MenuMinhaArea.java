@@ -1,34 +1,44 @@
 package view;
 
 import entities.Usuario;
+import repository.CrudAvaliacao;
 import repository.CrudPergunta;
+import repository.CrudResposta;
 import repository.CrudUsuario;
 
 /**
  * Area pessoal do usuario logado.
  *
- * Respostas e votos aparecem no menu, como pede o enunciado, mas pertencem aos
- * proximos trabalhos praticos.
+ * Permite gerenciar dados pessoais, perguntas, respostas e avaliacoes realizadas.
  */
 public class MenuMinhaArea {
 
     private final MenuMeusDados menuMeusDados;
     private final MenuPerguntas menuPerguntas;
+    private final MenuMinhasRespostas menuMinhasRespostas;
+    private final MenuMinhasAvaliacoes menuMinhasAvaliacoes;
 
-    public MenuMinhaArea(CrudUsuario crudUsuario, CrudPergunta crudPergunta) {
+    public MenuMinhaArea(CrudUsuario crudUsuario, CrudPergunta crudPergunta,
+            CrudResposta crudResposta, CrudAvaliacao crudAvaliacao) {
         this.menuMeusDados = new MenuMeusDados(crudUsuario);
-        this.menuPerguntas = new MenuPerguntas(crudPergunta);
+        this.menuPerguntas = new MenuPerguntas(crudUsuario, crudPergunta, crudResposta,
+            crudAvaliacao);
+        this.menuMinhasRespostas = new MenuMinhasRespostas(crudUsuario, crudPergunta, crudResposta);
+        this.menuMinhasAvaliacoes = new MenuMinhasAvaliacoes(crudUsuario, crudPergunta, crudResposta, crudAvaliacao);
     }
 
-    /** Devolve false quando o usuario excluiu a propria conta e precisa deslogar. */
+    public MenuMinhaArea(CrudUsuario crudUsuario, CrudPergunta crudPergunta) {
+        this(crudUsuario, crudPergunta, null, null);
+    }
+
     public void mostrar(Usuario usuario) {
         char opcao;
         do {
-            Console.cabecalho("Inicio > Minha area");
+            Console.cabecalho("Início > Minha área");
             Console.mensagem("(A) Meus dados");
             Console.mensagem("(B) Minhas perguntas");
             Console.mensagem("(C) Minhas respostas");
-            Console.mensagem("(D) Meus votos");
+            Console.mensagem("(D) Minhas avaliações");
             Console.mensagem("(R) Retornar ao menu anterior");
             Console.mensagem("");
             opcao = Console.lerOpcao();
@@ -41,12 +51,10 @@ public class MenuMinhaArea {
                     menuPerguntas.mostrar(usuario);
                     break;
                 case 'C':
-                    Console.erro("As respostas serao implementadas no proximo trabalho pratico.");
-                    Console.pausar();
+                    menuMinhasRespostas.mostrar(usuario);
                     break;
                 case 'D':
-                    Console.erro("Os votos serao implementados em um trabalho pratico posterior.");
-                    Console.pausar();
+                    menuMinhasAvaliacoes.mostrar(usuario);
                     break;
                 case 'R':
                     break;

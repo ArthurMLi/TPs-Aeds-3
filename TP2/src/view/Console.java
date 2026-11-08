@@ -13,7 +13,7 @@ public class Console {
 
     private static final Scanner ENTRADA = new Scanner(System.in);
 
-    public static final String TITULO = "AJUDA AI 1.0";
+    public static final String TITULO = "AJUDA AÍ 1.0";
 
     private Console() {
     }

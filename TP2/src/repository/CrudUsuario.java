@@ -1,7 +1,9 @@
 package repository;
 
 import entities.Usuario;
+import files.ArquivoAvaliacao;
 import files.ArquivoPergunta;
+import files.ArquivoResposta;
 import files.ArquivoUsuario;
 import util.Crypto;
 
@@ -17,11 +19,12 @@ import java.util.regex.Pattern;
  */
 public class CrudUsuario {
 
-    private static final Pattern EMAIL_VALIDO =
-            Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");
+    private static final Pattern EMAIL_VALIDO = Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");
 
     private final ArquivoUsuario arqUsuarios;
     private ArquivoPergunta arqPerguntas;
+    private ArquivoResposta arqRespostas;
+    private ArquivoAvaliacao arqAvaliacoes;
 
     public CrudUsuario() throws Exception {
         this.arqUsuarios = new ArquivoUsuario();
@@ -34,6 +37,16 @@ public class CrudUsuario {
     /** Permite a exclusao em cascata das perguntas quando o usuario e excluido. */
     public void setArquivoPergunta(ArquivoPergunta arqPerguntas) {
         this.arqPerguntas = arqPerguntas;
+    }
+
+    /** Permite a exclusao em cascata das respostas quando o usuario e excluido. */
+    public void setArquivoResposta(ArquivoResposta arqRespostas) {
+        this.arqRespostas = arqRespostas;
+    }
+
+    /** Permite a exclusao em cascata das avaliacoes quando o usuario e excluido. */
+    public void setArquivoAvaliacao(ArquivoAvaliacao arqAvaliacoes) {
+        this.arqAvaliacoes = arqAvaliacoes;
     }
 
     public ArquivoUsuario getArquivoUsuario() {
@@ -81,7 +94,7 @@ public class CrudUsuario {
      * diferencas de digitacao na hora de recuperar a senha.
      */
     public String criar(String nome, String email, String senha,
-                        String perguntaSecreta, String respostaSecreta) {
+            String perguntaSecreta, String respostaSecreta) {
         String erro = validarDados(nome, email, senha, perguntaSecreta, respostaSecreta);
         if (erro != null) {
             return erro;
@@ -106,7 +119,7 @@ public class CrudUsuario {
     }
 
     private String validarDados(String nome, String email, String senha,
-                                String perguntaSecreta, String respostaSecreta) {
+            String perguntaSecreta, String respostaSecreta) {
         if (nome == null || nome.trim().length() < 4) {
             return "O nome deve ter no minimo 4 caracteres.";
         }
@@ -238,11 +251,11 @@ public class CrudUsuario {
     // ------------------------------------------------------------------
 
     /**
-     * Exclui o usuario. Como o relacionamento e 1:N e as perguntas dependem do
-     * usuario, a exclusao e em cascata: primeiro as perguntas (arquivo de dados
-     * e arvore B+), depois o usuario (arquivo de dados e indice de email).
-     * Apagar o usuario primeiro deixaria perguntas orfas apontando para um ID
-     * que nao existe mais.
+     * Exclui o usuario. Perguntas, respostas e avaliacoes dependem dele, entao a
+     * exclusao e em cascata: primeiro as avaliacoes que ele fez, depois as
+     * respostas que escreveu, depois as perguntas (com as respostas a elas) e,
+     * por fim, o usuario (arquivo de dados e indice de email). Apagar o usuario
+     * primeiro deixaria registros orfaos apontando para um ID que nao existe.
      */
     public String excluir(int idUsuario) {
         try {
@@ -250,11 +263,9 @@ public class CrudUsuario {
             if (usuario == null) {
                 return "Usuario nao encontrado.";
             }
-            if (arqPerguntas != null) {
-                return arqUsuarios.delete(idUsuario, arqPerguntas)
-                        ? null : "Nao foi possivel excluir o usuario.";
-            }
-            return arqUsuarios.delete(idUsuario) ? null : "Nao foi possivel excluir o usuario.";
+            return arqUsuarios.delete(idUsuario, arqPerguntas, arqRespostas, arqAvaliacoes)
+                    ? null
+                    : "Nao foi possivel excluir o usuario.";
         } catch (Exception e) {
             return "Nao foi possivel excluir o usuario: " + e.getMessage();
         }

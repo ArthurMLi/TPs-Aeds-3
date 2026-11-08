@@ -70,7 +70,6 @@ public class ParDataId implements InterfaceArvoreBMais<ParDataId>{
 
   @Override
   public String toString() {
-    //ta errado isso aqui tem q arrumar
-    return String.format("%3d", this.id) + ";" + String.format("%-3d", this.data);
+    return this.data + ";" + String.format("%-3d", this.id);
   }
 }

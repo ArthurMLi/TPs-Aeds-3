@@ -99,6 +99,24 @@ public class ArquivoUsuario extends Arquivo<Usuario> {
     }
 
     public boolean delete(int id, ArquivoPergunta arqPerguntas) throws Exception {
+        return delete(id, arqPerguntas, null, null);
+    }
+
+    /**
+     * Exclusao em cascata do usuario e de tudo que depende dele. A ordem
+     * importa: primeiro as avaliacoes que ele fez (revertendo a nota das
+     * respostas avaliadas), depois as respostas que ele escreveu (com as
+     * avaliacoes que elas receberam), depois as perguntas dele (com as
+     * respostas de outros usuarios a elas) e, por fim, o proprio usuario.
+     */
+    public boolean delete(int id, ArquivoPergunta arqPerguntas,
+            ArquivoResposta arqRespostas, ArquivoAvaliacao arqAvaliacoes) throws Exception {
+        if (arqAvaliacoes != null) {
+            arqAvaliacoes.deleteAllByUsuario(id);
+        }
+        if (arqRespostas != null) {
+            arqRespostas.deleteAllByUsuario(id);
+        }
         if (arqPerguntas != null) {
             Pergunta[] perguntas = arqPerguntas.readAllByUsuario(id);
             for (int i = 0; i < perguntas.length; i++) {

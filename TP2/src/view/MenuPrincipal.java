@@ -1,7 +1,9 @@
 package view;
 
 import entities.Usuario;
+import repository.CrudAvaliacao;
 import repository.CrudPergunta;
+import repository.CrudResposta;
 import repository.CrudUsuario;
 
 /**
@@ -14,17 +16,23 @@ public class MenuPrincipal {
     private final MenuMinhaArea menuMinhaArea;
     private final MenuBuscarPerguntas menuBuscarPerguntas;
 
-    public MenuPrincipal(CrudUsuario crudUsuario, CrudPergunta crudPergunta) {
-        this.menuMinhaArea = new MenuMinhaArea(crudUsuario, crudPergunta);
-        this.menuBuscarPerguntas = new MenuBuscarPerguntas(crudUsuario, crudPergunta);
+    public MenuPrincipal(CrudUsuario crudUsuario, CrudPergunta crudPergunta,
+            CrudResposta crudResposta) {
+        this(crudUsuario, crudPergunta, crudResposta, null);
+    }
+
+    public MenuPrincipal(CrudUsuario crudUsuario, CrudPergunta crudPergunta,
+            CrudResposta crudResposta, CrudAvaliacao crudAvaliacao) {
+        this.menuMinhaArea = new MenuMinhaArea(crudUsuario, crudPergunta, crudResposta, crudAvaliacao);
+        this.menuBuscarPerguntas = new MenuBuscarPerguntas(crudUsuario, crudPergunta, crudResposta, crudAvaliacao);
     }
 
     /** O usuario logado e passado adiante como o "dono" de tudo que for exibido. */
     public void mostrar(Usuario usuario) {
         char opcao;
         do {
-            Console.cabecalho("Inicio");
-            Console.mensagem("(A) Minha area");
+            Console.cabecalho("Início");
+            Console.mensagem("(A) Minha área");
             Console.mensagem("(B) Buscar perguntas");
             Console.mensagem("(S) Sair");
             Console.mensagem("");

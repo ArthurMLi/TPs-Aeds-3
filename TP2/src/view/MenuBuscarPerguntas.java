@@ -1,7 +1,9 @@
 package view;
 
 import entities.Usuario;
+import repository.CrudAvaliacao;
 import repository.CrudPergunta;
+import repository.CrudResposta;
 import repository.CrudUsuario;
 
 public class MenuBuscarPerguntas {
@@ -9,16 +11,22 @@ public class MenuBuscarPerguntas {
     private final CrudUsuario crudUsuario;
     private final MenuPerguntasMaisRecentes menuPerguntasMaisRecentes;
 
-    public MenuBuscarPerguntas(CrudUsuario crudUsuario, CrudPergunta crudPergunta) {
+    public MenuBuscarPerguntas(CrudUsuario crudUsuario, CrudPergunta crudPergunta,
+            CrudResposta crudResposta) {
+        this(crudUsuario, crudPergunta, crudResposta, null);
+    }
+
+    public MenuBuscarPerguntas(CrudUsuario crudUsuario, CrudPergunta crudPergunta,
+            CrudResposta crudResposta, CrudAvaliacao crudAvaliacao) {
         this.crudUsuario = crudUsuario;
         this.menuPerguntasMaisRecentes =
-                new MenuPerguntasMaisRecentes(crudUsuario, crudPergunta);
+                new MenuPerguntasMaisRecentes(crudUsuario, crudPergunta, crudResposta, crudAvaliacao);
     }
 
     public void mostrar(Usuario usuario) {
         char opcao;
         do {
-            Console.cabecalho("Inicio > Buscar perguntas");
+            Console.cabecalho("Início > Buscar perguntas");
             Console.mensagem("(A) Perguntas mais recentes");
             Console.mensagem("(B) Busca por palavras-chave");
             Console.mensagem("");
@@ -31,7 +39,7 @@ public class MenuBuscarPerguntas {
                     menuPerguntasMaisRecentes.mostrar(usuario);
                     break;
                 case 'B':
-                    Console.erro("A busca por palavras-chave sera implementada no proximo trabalho pratico.");
+                    Console.erro("A busca por palavras-chave será implementada no próximo trabalho prático.");
                     Console.pausar();
                     break;
                 case 'R':
