@@ -75,31 +75,19 @@ public class ArquivoPergunta extends Arquivo<Pergunta> {
         if (tokens.isEmpty()) {
             throw new Exception("A pergunta precisa ter ao menos uma palavra-chave valida.");
         }
-        Map<String, Integer> frequencias = new HashMap<>();
-        for (String token : tokens) {
-            frequencias.put(token, frequencias.containsKey(token)
-                    ? frequencias.get(token) + 1 : 1);
-        }
-        for (Map.Entry<String, Integer> entrada : frequencias.entrySet()) {
-            float tf = (float) entrada.getValue() / tokens.size();
-            ElementoLista atual = buscarElemento(entrada.getKey(), pergunta.getId());
+        // Cada ocorrencia vale 1/total. A ListaInvertida nao aceita o mesmo ID
+        // duas vezes no termo, entao a repeticao soma na frequencia ja gravada.
+        float frequencia = 1f / tokens.size();
+        for (String termo : tokens) {
+            ElementoLista atual = indicePalavras.read(termo, pergunta.getId());
             if (atual == null) {
-                indicePalavras.create(entrada.getKey(), new ElementoLista(pergunta.getId(), tf));
+                indicePalavras.create(termo, new ElementoLista(pergunta.getId(), frequencia));
             } else {
-                indicePalavras.update(entrada.getKey(),
-                        new ElementoLista(pergunta.getId(), atual.getFrequencia() + tf));
+                indicePalavras.update(termo,
+                        new ElementoLista(pergunta.getId(), atual.getFrequencia() + frequencia));
             }
         }
         indicePalavras.incrementaEntidades();
-    }
-
-    private ElementoLista buscarElemento(String termo, int id) throws Exception {
-        for (ElementoLista elemento : indicePalavras.read(termo)) {
-            if (elemento.getId() == id) {
-                return elemento;
-            }
-        }
-        return null;
     }
 
     private void removerDoIndice(Pergunta pergunta) throws Exception {
@@ -211,6 +199,10 @@ public class ArquivoPergunta extends Arquivo<Pergunta> {
         }
         if (atual.getIdUsuario() != pergunta.getIdUsuario()) {
             throw new Exception("O idUsuario de uma pergunta nao pode ser alterado.");
+        }
+        // Valida antes de gravar: depois do super.update nao ha como desfazer.
+        if (pergunta.isAtiva() && PalavrasChave.tokens(pergunta.getPalavrasChave()).isEmpty()) {
+            throw new Exception("A pergunta precisa ter ao menos uma palavra-chave valida.");
         }
         Pergunta copiaAnterior = new Pergunta(atual.getId(), atual.getIdUsuario(),
                 atual.getCriacao(), atual.getAlteracao(), atual.getNota(),

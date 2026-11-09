@@ -14,7 +14,7 @@ public class MenuPerguntasMaisRecentes {
 
     private static final int TAMANHO_PAGINA = 5;
     private static final DateTimeFormatter FORMATO =
-            DateTimeFormatter.ofPattern("dd/MM/yyyy 'às' HH:mm");
+            DateTimeFormatter.ofPattern("dd/MM/yyyy 'as' HH:mm");
 
     private final CrudPergunta crudPergunta;
     private final CrudUsuario crudUsuario;

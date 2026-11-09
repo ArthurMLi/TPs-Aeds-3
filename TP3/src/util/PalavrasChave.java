@@ -11,10 +11,27 @@ import java.util.stream.Collectors;
 public final class PalavrasChave {
 
     private static final Set<String> STOP_WORDS = new HashSet<>(Arrays.asList(
-            "a", "ao", "aos", "as", "com", "da", "das", "de", "do", "dos",
-            "e", "em", "entre", "essa", "esse", "esta", "este", "ha", "isso",
-            "isto", "na", "nas", "no", "nos", "o", "os", "para", "por", "que",
-            "se", "sem", "sua", "suas", "seu", "seus", "um", "uma", "uns", "umas"));
+            // artigos, preposicoes e contracoes
+            "a", "ao", "aos", "as", "o", "os", "um", "uma", "uns", "umas",
+            "ante", "apos", "ate", "com", "contra", "de", "desde", "em", "entre",
+            "para", "perante", "por", "sem", "sob", "sobre", "tras",
+            "da", "das", "do", "dos", "dum", "duma", "duns", "dumas",
+            "na", "nas", "no", "nos", "num", "numa", "nuns", "numas",
+            "pela", "pelas", "pelo", "pelos",
+            // pronomes e conjuncoes
+            "e", "essa", "esse", "esta", "este", "isso", "isto", "ha", "mas",
+            "nao", "nem", "ou", "que", "se", "sua", "suas", "seu", "seus",
+            // numerais por extenso
+            "zero", "dois", "duas", "tres", "quatro", "cinco", "seis", "sete",
+            "oito", "nove", "dez", "onze", "doze", "treze", "catorze", "quatorze",
+            "quinze", "dezesseis", "dezessete", "dezoito", "dezenove", "vinte",
+            "trinta", "quarenta", "cinquenta", "sessenta", "setenta", "oitenta",
+            "noventa", "cem", "cento", "mil",
+            "primeiro", "primeira", "segundo", "segunda", "terceiro", "terceira",
+            // proprias do dominio: toda pergunta do sistema tem esse formato
+            "como", "qual", "quais", "quando", "onde", "quem", "porque",
+            "pergunta", "perguntas", "resposta", "respostas", "duvida", "duvidas",
+            "ajuda"));
 
     private PalavrasChave() {
     }
@@ -33,6 +50,7 @@ public final class PalavrasChave {
         }
         return Arrays.stream(normalizado.split("\\s+"))
                 .filter(palavra -> !STOP_WORDS.contains(palavra))
+                .filter(palavra -> !palavra.matches("\\p{Nd}+")) // numerais em digitos
                 .collect(Collectors.toList());
     }
 }

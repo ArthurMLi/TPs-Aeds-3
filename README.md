@@ -2,13 +2,13 @@
 
 # Ajuda Aí 1.0
 
-### Trabalho Prático 2 — Relacionamento N:N
+### Trabalho Prático 3 — Índice invertido
 
 **Algoritmos e Estruturas de Dados III** · Ciência da Computação · PUC Minas — Coração Eucarístico  
 
 Prof. Marcos André S. Kutova · 2º semestre de 2026
 
-[**▶ Assistir ao vídeo de demonstração**](https://youtu.be/-6l6Q4uxQ4A)
+**Vídeo de demonstração:** _link a adicionar_
 
 </div>
 
@@ -29,33 +29,35 @@ Prof. Marcos André S. Kutova · 2º semestre de 2026
 4. [Telas do sistema](#4-telas-do-sistema)
 5. [Classes criadas e atualizadas](#5-classes-criadas-e-atualizadas)
 6. [Operações especiais](#6-operações-especiais)
-7. [Checklist oficial](#7-checklist-oficial)
+7. [Limitações conhecidas](#7-limitações-conhecidas)
+8. [Checklist oficial](#8-checklist-oficial)
 
 ## 1. Descrição do sistema
 
-O **Ajuda Aí 1.0** é um sistema de fórum de perguntas e respostas executado em terminal que gerencia dados persistidos diretamente em **arquivos binários**, sem qualquer gerenciador de banco de dados externo.
+O **Ajuda Aí 1.0** é um sistema de perguntas e respostas executado em terminal. Os dados ficam em **arquivos binários**, sem gerenciador de banco de dados externo.
 
-Nesta segunda etapa (TP2), o sistema evoluiu para suportar relacionamentos **N:N** (Muitos para Muitos) entre **Usuários** e **Perguntas** através da entidade intermediária **Resposta**, e entre **Usuários** e **Respostas** por meio da entidade associativa **Avaliação**. Todas as entidades são manipuladas por meio do CRUD genérico implementado sobre arquivos binários com organização em índices diretos (Hash Extensível) e indiretos (Árvores B+).
+O usuário pode se cadastrar, entrar no sistema, recuperar a senha pela pergunta secreta, gerenciar seus dados e incluir, alterar, listar e arquivar suas perguntas. As perguntas ativas podem ser listadas da mais recente para a mais antiga ou buscadas por palavras-chave.
 
-### Principais recursos do TP2
+Nesta terceira etapa, o sistema ganhou um **índice invertido** sobre o atributo `palavrasChave` das perguntas, construído com a classe `ListaInvertida` fornecida pelo professor. A busca devolve as perguntas ordenadas pelo valor **TF×IDF**.
+
+### Principais recursos do TP3
 
 | Recurso | Descrição |
 |---|---|
-| **Busca de Perguntas Mais Recentes** | Listagem paginada (de 5 em 5) ordenada de forma decrescente pela data de criação, indexada diretamente por Árvore B+. |
-| **Publicação de Respostas** | Qualquer usuário autenticado pode responder a perguntas ativas no sistema. |
-| **Ordenação de Respostas** | As respostas de uma pergunta são apresentadas ordenadas decrescentemente por nota de avaliação. |
-| **Avaliação de Respostas** | Votos positivos (+1) ou negativos (-1) com bloqueio estrito contra voto duplicado e voto na própria resposta. |
-| **Gestão e Moderação de Respostas** | O autor de uma resposta pode arquivá-la; adicionalmente, o autor da pergunta pode moderar e arquivar respostas inadequadas recebidas em suas postagens. |
-| **Minhas Respostas e Minhas Avaliações** | Gestão completa pelo autor na área do usuário, permitindo inclusive o cancelamento de uma avaliação com recálculo automático da pontuação da resposta. |
+| **Índice invertido** | Cada termo aponta para a lista de pares `(idPergunta; TF)` das perguntas em que aparece. |
+| **Tratamento de termos** | As palavras-chave são convertidas para minúsculas, perdem os acentos e passam por um filtro de stop words. |
+| **Busca por palavras-chave** | Nova opção em *Início > Buscar perguntas*, aceitando um ou mais termos. |
+| **Ranking TF×IDF** | As pontuações dos termos são somadas por pergunta, e o resultado é apresentado em ordem decrescente, de 5 em 5. |
+| **Índice sempre atualizado** | Inclusão, alteração, arquivamento e exclusão de perguntas atualizam as listas e o total de entidades. |
 
 ## 2. Como compilar e executar
 
-O projeto utiliza exclusivamente a biblioteca padrão do Java. A partir da pasta raiz `TP2`:
+O projeto utiliza exclusivamente a biblioteca padrão do Java. A partir da raiz do repositório:
 
 **Git Bash, Linux ou macOS**
 
 ```bash
-cd TP2
+cd TP3
 javac -encoding UTF-8 -d bin $(find src -name "*.java")
 java -cp bin -Dstdout.encoding=UTF-8 Principal
 ```
@@ -63,7 +65,7 @@ java -cp bin -Dstdout.encoding=UTF-8 Principal
 **PowerShell**
 
 ```powershell
-cd TP2
+cd TP3
 javac -encoding UTF-8 -d bin (Get-ChildItem -Recurse -Filter *.java src | ForEach-Object { $_.FullName })
 java -cp bin "-Dstdout.encoding=UTF-8" Principal
 ```
@@ -71,207 +73,196 @@ java -cp bin "-Dstdout.encoding=UTF-8" Principal
 **Prompt de comando (CMD)**
 
 ```cmd
-cd TP2
+cd TP3
 dir /s /b src\*.java > sources.txt
 javac -encoding UTF-8 -d bin @sources.txt
 java -cp bin -Dstdout.encoding=UTF-8 Principal
 ```
 
-> **Nota:** Os arquivos de dados binários e índices são criados automaticamente no diretório `TP2/dados/` durante a primeira execução. Para reiniciar a base de dados ao estado limpo, basta apagar essa pasta.
+> **Nota:** Os arquivos de dados e índices são criados automaticamente em `TP3/dados/` na primeira execução. Para reiniciar a base, basta apagar essa pasta. No console do Windows, execute `chcp 65001` antes do programa para que os acentos sejam exibidos corretamente.
 
 ## 3. Arquitetura
 
-O sistema segue a organização estrita em três camadas:
+O sistema segue a organização em três camadas:
 
-* **Visão (`view`)**: Gerencia a interação no terminal (apenas exibe informações e lê comandos).
-* **Controle (`repository`)**: Implementa as regras de negócio, validações e integridade.
-* **Persistência (`files`)**: Estende o CRUD genérico em arquivo binário e sincroniza os índices diretos e secundários.
+* **Visão (`view`)**: interação no terminal, apenas exibindo informações e lendo comandos.
+* **Controle (`repository`)**: regras de negócio e validações.
+* **Persistência (`files`)**: extensões do CRUD genérico que mantêm os índices sincronizados.
 
 ```
-TP2/src/
-├── Principal.java                     Instancia arquivos, conecta dependências e inicia o fluxo
-├── view/                              Camada de apresentação textual
+TP3/src/
+├── Principal.java                          Abre os arquivos e conecta as dependências
+├── view/                                   Camada de apresentação textual
 │   ├── Console.java
 │   ├── MenuAcesso.java
 │   ├── MenuPrincipal.java
 │   ├── MenuMinhaArea.java
 │   ├── MenuMeusDados.java
 │   ├── MenuPerguntas.java
-│   ├── MenuBuscarPerguntas.java       (novo) Menu de opções de busca
-│   ├── MenuPerguntasMaisRecentes.java (novo) Listagem paginada por data decrescente
-│   ├── MenuResposta.java              (novo) Visualização, resposta, avaliação e moderação
-│   ├── MenuMinhasRespostas.java       (novo) Gestão das respostas do usuário logado
-│   └── MenuMinhasAvaliacoes.java      (novo) Gestão e cancelamento de votos realizados
-├── repository/                        Camada de regras de negócio
+│   ├── MenuBuscarPerguntas.java            (atualizado) Inclui a busca por palavras-chave
+│   ├── MenuPerguntasMaisRecentes.java
+│   └── MenuPerguntasPorPalavrasChaves.java (novo) Consulta e resultados paginados
+├── repository/                             Camada de regras de negócio
 │   ├── CrudUsuario.java
-│   ├── CrudPergunta.java
-│   ├── CrudResposta.java              (novo) Regras de publicação, ordenação e moderação
-│   └── CrudAvaliacao.java             (novo) Regras de voto único, cancelamento e pontuação
-├── files/                             Camada de arquivos e índices
-│   ├── ArquivoUsuario.java            Cascata completa cobrindo respostas e votos
-│   ├── ArquivoPergunta.java           Árvore B+ por data de criação
-│   ├── ArquivoResposta.java           (novo) CRUD de respostas com duas árvores B+ relacionais
-│   └── ArquivoAvaliacao.java          (novo) CRUD de avaliações com árvores para usuário e resposta
-├── entities/                          Classes de dados serializáveis
+│   └── CrudPergunta.java                   (atualizado) Expõe a busca por palavras-chave
+├── files/                                  Camada de arquivos e índices
+│   ├── ArquivoUsuario.java
+│   └── ArquivoPergunta.java                (atualizado) Mantém o índice invertido e calcula o TF×IDF
+├── entities/                               Classes de dados serializáveis
 │   ├── Usuario.java
 │   ├── Pergunta.java
-│   ├── Resposta.java                  (novo) Entidade de Resposta
-│   └── Avaliacao.java                 (novo) Entidade de Avaliação
-├── aed3/                              Estruturas de dados fundamentais
-│   ├── Arquivo.java                   CRUD genérico com índice Hash Extensível por ID
+│   └── Resposta.java
+├── aed3/                                   Estruturas de dados da disciplina
+│   ├── Arquivo.java
 │   ├── ArvoreBMais.java
 │   ├── HashExtensivel.java
-│   ├── ParIdId.java
-│   ├── ParDataId.java                 (novo) Par (data long, idPergunta) para índice temporal
+│   ├── ListaInvertida.java                 (novo) Listas invertidas fornecidas pelo professor
+│   ├── ElementoLista.java                  (novo) Par (id; frequência) das listas
 │   └── ...
 └── util/
-    └── Crypto.java                    Hash SHA-256 e normalização textual
+    ├── Crypto.java
+    └── PalavrasChave.java                  (novo) Normalização e filtro de stop words
 ```
 
 ### Índices utilizados
 
 | Estrutura | Par chave-valor | Finalidade |
 |---|---|---|
-| Hash Extensível | `idEntidade → endereço` | Índice direto de cada entidade, embutido no CRUD genérico da classe `Arquivo`. |
-| Hash Extensível | `email → idUsuario` | Índice indireto exclusivo para autenticação e verificação de duplicidade de e-mail. |
-| Árvore B+ | `(idUsuario, idPergunta)` | Perguntas criadas por um usuário específico. |
-| Árvore B+ | `(criacao, idPergunta)` | **(Novo)** Índice ordenado temporalmente por data em milissegundos para busca paginada. |
-| Árvore B+ | `(idPergunta, idResposta)` | **(Novo)** Respostas associadas a uma pergunta. |
-| Árvore B+ | `(idUsuario, idResposta)` | **(Novo)** Respostas escritas por um usuário específico. |
-| Árvore B+ | `(idResposta, idAvaliacao)` | **(Novo)** Avaliações atribuídas a uma resposta. |
-| Árvore B+ | `(idUsuario, idAvaliacao)` | **(Novo)** Avaliações emitidas por um usuário e bloqueio de votos duplicados. |
+| Hash Extensível | `id → endereço` | Índice direto de cada entidade, embutido na classe `Arquivo`. |
+| Hash Extensível | `email → idUsuario` | Autenticação e verificação de e-mail duplicado. |
+| Árvore B+ | `(idUsuario, idPergunta)` | Perguntas de um usuário. |
+| Árvore B+ | `(criacao, idPergunta)` | Listagem das perguntas mais recentes. |
+| Lista Invertida | `termo → (idPergunta; TF)` | **(Novo)** Busca de perguntas por palavras-chave. |
+
+O índice invertido é gravado em dois arquivos: `dados/perguntas/dicionarioPalavras.listainv.db` guarda o total de entidades e os termos, e `dados/perguntas/blocosPalavras.listainv.db` guarda os blocos encadeados com 5 elementos cada.
 
 ## 4. Telas do sistema
 
-### Busca de perguntas mais recentes (Paginada)
+As capturas abaixo foram feitas no console do Windows, usando as frases do exemplo do enunciado como perguntas e como palavras-chave. Nos testes, a entrada foi enviada ao programa por redirecionamento, por isso o texto digitado não aparece após os prompts. A legenda de cada imagem informa o que foi digitado.
 
-![](Imagens/01-perguntas-recentes.JPG)
+### Busca por mais de uma palavra-chave, ordenada por TF×IDF
 
-### Pergunta com respostas ordenadas por nota
+Termos digitados: `Inteligência Artificial`.
 
-![](Imagens/02-respostas-ordenadas.JPG)
+![Resultado da busca por Inteligência Artificial](Imagens/tp3-01-busca-varios-termos.png)
 
-### Formulário de resposta
+### Busca antes e depois da alteração das palavras-chave
 
-![](Imagens/03-formulario-resposta.JPG)
+Antes da alteração, a pergunta é encontrada pelo termo `emocional`.
 
-### Minhas respostas
+![Pergunta encontrada pelo termo emocional](Imagens/tp3-02-antes-da-alteracao.png)
 
-![](Imagens/04-minhas-respostas.JPG)
+Em *Minha área > Minhas perguntas > Alterar*, as palavras-chave da pergunta 2 foram trocadas por `culinaria;receitas`.
 
-### Minhas avaliações e opção de cancelamento
+![Alteração das palavras-chave](Imagens/tp3-03-alteracao.png)
 
-![](Imagens/05-minhas-avaliacoes.JPG)
+Depois da alteração, o termo antigo `emocional` não encontra mais a pergunta.
+
+![Busca pelo termo antigo sem resultados](Imagens/tp3-04-termo-antigo.png)
+
+O novo termo `culinária` encontra a pergunta. A acentuação da consulta é ignorada, pois os termos passam pelo mesmo tratamento da indexação.
+
+![Pergunta encontrada pelo novo termo](Imagens/tp3-05-termo-novo.png)
 
 ## 5. Classes criadas e atualizadas
 
 | Classe | Camada | Responsabilidade |
 |---|---|---|
-| `entities.Resposta` | Entidade | Representa a resposta com `idResposta`, `idPergunta`, `idUsuario`, `criacao`, `resposta`, `nota`, `avaliacoes` e `ativa`. |
-| `entities.Avaliacao` | Entidade | Representa o voto com `idAvaliacao`, `idUsuario`, `idResposta` e `avaliacao` (booleano: `true` positivo, `false` negativo). |
-| `aed3.ParDataId` | AED3 | Par ordenável `(long criacao, int idPergunta)` usado na Árvore B+ para viabilizar a busca por data decrescente. |
-| `files.ArquivoPergunta` | Arquivos | Adicionada a árvore `relDataPergunta` e o método `readAllByData()` para leitura temporal. Exclusão física remove respostas associadas. |
-| `files.ArquivoResposta` | Arquivos | Especialização de `Arquivo<Resposta>` com as duas árvores B+ do N:N: `relPerguntaResposta` e `relUsuarioResposta`. Valida integridade referencial antes da inserção. |
-| `files.ArquivoAvaliacao` | Arquivos | Especialização de `Arquivo<Avaliacao>` com índices `relRespostaAvaliacao` e `relUsuarioAvaliacao`. Método `readByUsuarioEResposta()` previne voto duplicado. |
-| `files.ArquivoUsuario` | Arquivos | Cascata estendida: a remoção de usuário apaga suas avaliações (revertendo notas), suas respostas e suas perguntas (com as respectivas respostas de terceiros). |
-| `repository.CrudResposta` | Controle | Regras de negócio de respostas: validação de texto, impedimento de resposta a pergunta arquivada, ordenação decrescente por nota e regras de permissão de arquivamento. |
-| `repository.CrudAvaliacao` | Controle | Regras de votação: bloqueia autoavaliação e voto duplicado, atualiza nota e contador na `Resposta`, e gerencia o cancelamento de votos. |
-| `view.MenuBuscarPerguntas` | Visão | Submenu de busca de perguntas (mais recentes ou por palavras-chave). |
-| `view.MenuPerguntasMaisRecentes` | Visão | Exibição paginada (5 por página) das perguntas recentes com controles de avanço e retorno. |
-| `view.MenuResposta` | Visão | Exibição detalhada de pergunta/resposta e adaptação contextual das ações permitidas (concordar/discordar para terceiros, arquivar para o autor ou dono da pergunta). |
-| `view.MenuMinhasRespostas` | Visão | Interface para visualização e arquivamento das respostas criadas pelo usuário logado. |
-| `view.MenuMinhasAvaliacoes` | Visão | Interface para visualização e cancelamento das avaliações feitas pelo usuário logado. |
+| `aed3.ListaInvertida` | AED3 | Classe fornecida pelo professor. Mantém o dicionário de termos, os blocos encadeados e o total de entidades. |
+| `aed3.ElementoLista` | AED3 | Classe fornecida pelo professor. Representa o par `(id; frequência)`. |
+| `util.PalavrasChave` | Utilitário | **Nova.** Transforma um texto no vetor de termos válidos, tanto na indexação quanto na consulta. |
+| `view.MenuPerguntasPorPalavrasChaves` | Visão | **Nova.** Lê a consulta e exibe os resultados de 5 em 5, com opções de página anterior e próxima página. |
+| `files.ArquivoPergunta` | Arquivos | **Atualizada.** Contém o índice invertido, os métodos privados `indexar()` e `removerDoIndice()` e o método `readByKeywords()`, que calcula o TF×IDF. |
+| `repository.CrudPergunta` | Controle | **Atualizada.** Método `listarPorPalavrasChave()`, usado pela visão. |
+| `view.MenuBuscarPerguntas` | Visão | **Atualizada.** Opção *(B) Busca por palavras-chave*. |
 
 ## 6. Operações especiais
 
-### 1. O Relacionamento N:N modelado como duas Árvores B+ 1:N
+### 1. Tratamento dos termos
 
-O relacionamento entre usuários e perguntas é N:N: um usuário pode responder a várias perguntas, e uma pergunta pode receber respostas de vários usuários. Para representar essa relação em arquivos binários sem redundância:
+`PalavrasChave.tokens()` aplica o mesmo tratamento às palavras-chave cadastradas e aos termos digitados na busca:
 
-1. A entidade `Resposta` atua como entidade associativa, armazenando como chaves estrangeiras `idPergunta` e `idUsuario`.
-2. O arquivo `ArquivoResposta` gerencia duas Árvores B+:
-   * `relPerguntaResposta`: par `(idPergunta, idResposta)`, permitindo recuperar rapidamente todas as respostas vinculadas a uma pergunta.
-   * `relUsuarioResposta`: par `(idUsuario, idResposta)`, viabilizando a listagem imediata de todas as respostas escritas por um determinado usuário.
+1. Remove os acentos com `Normalizer` na forma NFD e passa o texto para minúsculas.
+2. Troca por espaço tudo o que não for letra ou dígito, de modo que `;`, vírgula e espaço funcionam como separadores.
+3. Descarta as stop words: artigos, preposições, contrações, pronomes e conjunções comuns, numerais por extenso e termos próprios do domínio de perguntas e respostas, como `como`, `qual`, `pergunta` e `duvida`.
+4. Descarta os numerais escritos em dígitos, como `2026`.
 
-O mesmo padrão arquitetural foi aplicado entre usuários e respostas através da entidade `Avaliacao`, utilizando árvores indexadas por `(idResposta, idAvaliacao)` e `(idUsuario, idAvaliacao)`.
+Por exemplo, `Introdução à Inteligência Artificial` vira `[introducao, inteligencia, artificial]`.
 
-### 2. Listagem temporal por Árvore B+ e Paginação
+Uma pergunta precisa ter ao menos um termo válido. Palavras-chave como `de;para` ou `2026;10` são recusadas na inclusão e na alteração, antes de qualquer gravação, e a pergunta permanece como estava.
 
-Em vez de carregar todas as perguntas para a memória e aplicar rotinas de ordenação, as perguntas são indexadas na Árvore B+ no momento da criação pelo par `ParDataId(long criacao, int idPergunta)`.
+### 2. Construção das listas (TF)
 
-* Como as folhas da Árvore B+ mantêm os pares ordenados crescentemente pela data em milissegundos, a consulta `relDataPergunta.read(null)` retorna todos os registros pré-ordenados.
-* O método `readAllByData()` percorre essa lista do fim para o início, garantindo a ordem decrescente sem sobrecarga de processamento.
-* A visualização (`MenuPerguntasMaisRecentes`) fatia a lista em blocos de 5 elementos (`TAMANHO_PAGINA = 5`), exibindo as opções de página anterior e próxima página dinamicamente conforme os limites da lista.
+Na inclusão, `ArquivoPergunta.indexar()` percorre o vetor de termos, e cada ocorrência vale `1 / total de termos válidos`. Como a classe `ListaInvertida` não aceita o mesmo ID duas vezes em um termo, o método segue o procedimento do enunciado:
 
-### 3. Voto único, Nota e Cancelamento de Avaliação
+```java
+ElementoLista atual = indicePalavras.read(termo, pergunta.getId());
+if (atual == null) {
+    indicePalavras.create(termo, new ElementoLista(pergunta.getId(), frequencia));
+} else {
+    indicePalavras.update(termo,
+            new ElementoLista(pergunta.getId(), atual.getFrequencia() + frequencia));
+}
+```
 
-A nota e a quantidade de avaliações são mantidas diretamente nos atributos da entidade `Resposta` para garantir leituras imediatas:
+Ao final, a pergunta indexada chama `incrementaEntidades()`, pois o total de entidades é necessário para o IDF.
 
-* **Bloqueio de duplicidade:** Antes de registrar uma nova avaliação, o método `readByUsuarioEResposta()` percorre as avaliações do usuário via Árvore B+ para certificar que ele ainda não votou naquela resposta. O voto na própria resposta também é rejeitado.
-* **Cancelamento:** Na tela *Minhas avaliações*, o usuário pode cancelar um voto registrado. O método `CrudAvaliacao.cancelar()` recupera a avaliação, inverte o impacto na `Resposta` (se era voto positivo, subtrai 1 da nota; se era negativo, soma 1; e decrementa em 1 o contador de avaliações) e aciona `ArquivoAvaliacao.delete()`, que remove o registro físico e as referências nas árvores B+. Com isso, o usuário fica livre para votar novamente se desejar.
+Com as perguntas do exemplo do enunciado, `inteligencia` tem TF 0,2 + 0,2 = 0,4 na pergunta 3.
 
-### 4. Permissões de Arquivamento e Moderação
+### 3. Busca e ranking TF×IDF
 
-Respostas não sofrem alteração de conteúdo para não invalidar avaliações já recebidas e não são excluídas fisicamente para preservar a integridade histórica. Elas operam sob a flag lógica `ativa`:
+`ArquivoPergunta.readByKeywords()` executa os passos do enunciado:
 
-* O **autor da resposta** pode arquivá-la acessando sua própria resposta.
-* O **autor da pergunta** tem autorização para arquivar respostas inadequadas recebidas em sua publicação.
-* Ao ser marcada como inativa (`ativa = false`), a resposta é omitida tanto da visualização pública da pergunta quanto do menu *Minhas respostas* do seu autor.
+1. Aplica `PalavrasChave.tokens()` à consulta.
+2. Lê a lista de cada termo e calcula `IDF = log10(total de entidades / tamanho da lista)`.
+3. Multiplica o TF de cada elemento pelo IDF do termo e soma os valores do mesmo ID em um `HashMap`.
+4. Ordena os resultados pela pontuação decrescente. Em caso de empate, a pergunta de menor ID vem primeiro.
 
-## 7. Checklist oficial
+Consulta `Inteligência Artificial` com as 4 perguntas do enunciado:
 
-> **Há uma listagem paginada de perguntas, que mostra as perguntas em ordem decrescente de data a partir de uma Árvore B+ acrescentada ao CRUD de Perguntas?**
+| Pergunta | `inteligencia` (TF × 0,125) | `artificial` (TF × 0,301) | Total |
+|---|---|---|---|
+| 1 | 0,333 × 0,125 = 0,042 | 0,333 × 0,301 = 0,100 | **0,142** |
+| 3 | 0,400 × 0,125 = 0,050 | 0,200 × 0,301 = 0,060 | **0,110** |
+| 2 | 0,333 × 0,125 = 0,042 | — | **0,042** |
 
-**Sim.** A classe `ArquivoPergunta` mantém a Árvore B+ `relDataPergunta` com o par `ParDataId(criacao, id)`. A listagem lê as folhas ordenadas da árvore e as percorre de trás para frente, com apresentação paginada de 5 em 5 no `MenuPerguntasMaisRecentes`.
+A ordem final é 1, 3, 2, a mesma apresentada na tela da seção 4 e no enunciado. A pergunta 4 não aparece porque não contém nenhum dos termos.
 
-> **Há uma listagem das respostas a uma pergunta selecionada, em ordem decrescente de nota?**
+### 4. Manutenção do índice
 
-**Sim.** O método `CrudResposta.listarPorPergunta()` recupera as respostas da pergunta via Árvore B+ `(idPergunta, idResposta)` e as ordena decrescentemente pelo campo `nota` (com desempate pela mais antiga).
+| Operação | O que acontece no índice invertido |
+|---|---|
+| **Inclusão** | Os termos são inseridos e o total de entidades aumenta em 1. |
+| **Alteração** | Os pares dos termos antigos são removidos e os novos são inseridos, com o total de entidades decrementado e incrementado. |
+| **Arquivamento** | Os pares são removidos e o total diminui, para que uma pergunta invisível não influencie o IDF. A pergunta continua nos demais índices e em *Minhas perguntas*. |
+| **Exclusão** | Os pares de uma pergunta ativa são removidos junto com os demais índices. Isso também ocorre na exclusão em cascata de um usuário. |
 
-> **O usuário pode responder a uma pergunta?**
+## 7. Limitações conhecidas
 
-**Sim.** A opção está disponível na exibição da pergunta (`(A) Responder à pergunta`), gravando a entidade `Resposta` vinculada ao autor autenticado e à pergunta correspondente.
+* **Respostas e avaliações.** A pasta `TP3` foi construída sobre a base de perguntas e não inclui as telas e regras de respostas e avaliações, que estão na pasta `TP2`. Ao abrir uma pergunta, o sistema exibe um aviso no lugar das respostas.
 
-> **O usuário pode arquivar a própria resposta?**
+## 8. Checklist oficial
 
-**Sim.** Ao abrir sua própria resposta, o menu restringe as opções a `(A) Arquivar resposta`, sinalizando o registro com `ativa = false`.
+> **O índice invertido com palavras-chave foi criado usando a classe ListaInvertida?**
 
-> **O usuário pode avaliar uma resposta?**
+**Sim.** `ArquivoPergunta` instancia `aed3.ListaInvertida` com os arquivos `dicionarioPalavras.listainv.db` e `blocosPalavras.listainv.db` e a mantém na inclusão, alteração, arquivamento e exclusão de perguntas.
 
-**Sim.** Usuários podem concordar (+1) ou discordar (-1) de respostas de terceiros. Votos na própria resposta e votos duplicados são bloqueados pela camada de controle.
+> **É possível buscar perguntas por palavras-chave no menu de buscar perguntas?**
 
-> **Na área do usuário, o usuário pode visualizar as respostas às suas perguntas?**
+**Sim.** A opção está em *Início > Buscar perguntas > (B) Busca por palavras-chave*, e aceita um ou mais termos.
 
-**Sim.** Ao acessar *Minha área > Minhas perguntas* e selecionar uma pergunta, são listadas todas as respostas ativas já recebidas.
+> **As perguntas retornadas estão corretamente classificadas pelo modelo TFxIDF?**
 
-> **Na área do usuário, o usuário pode arquivar uma resposta de outro usuário a uma das suas perguntas?**
-
-**Sim.** O autor da pergunta tem privilégio de moderação sobre respostas de terceiros em sua publicação, podendo selecioná-la e utilizar a opção de arquivamento.
-
-> **Na área do usuário, o usuário pode visualizar e arquivar as respostas que escreveu?**
-
-**Sim.** A opção *Minha área > Minhas respostas* lista as respostas ativas do usuário a partir da árvore `relUsuarioResposta`, permitindo visualizá-las e arquivá-las.
-
-> **Na área do usuário, o usuário pode visualizar e arquivar a avaliação que realizou em uma resposta?**
-
-**Sim.** O menu *Minha área > Minhas avaliações* exibe os votos emitidos e permite cancelá-los, desfazendo a pontuação na resposta e removendo os índices da avaliação.
-
-> **A integridade do relacionamento entre perguntas e respostas está mantida em todas as operações?**
-
-**Sim.** A inclusão valida a existência prévia de usuário e pergunta; a integridade referencial é protegida em alterações e na exclusão em cascata.
-
-> **A integridade do relacionamento entre respostas e avaliações está mantida em todas as operações?**
-
-**Sim.** A criação valida IDs existentes; o cancelamento ou exclusão física reverte os pontos da resposta e limpa todos os pares nas Árvores B+.
+**Sim.** `ArquivoPergunta.readByKeywords()` calcula `TF × log10(N / tamanho da lista)`, soma os valores por pergunta e ordena de forma decrescente. O exemplo do enunciado foi reproduzido no sistema e gerou a ordem 1, 3, 2, conforme a seção 6.
 
 > **O trabalho compila corretamente?**
 
-**Sim.** Compilado com `javac` em codificação UTF-8 sobre todos os arquivos do projeto sem erros ou avisos.
+**Sim.** Compilado com `javac -encoding UTF-8` no Java 25, sem erros.
 
 > **O trabalho está completo e funcionando sem erros de execução?**
 
-**Sim.** Todas as funcionalidades, fluxos de navegação e restrições de integridade foram testados de ponta a ponta.
+**Sim.** Tudo o que o enunciado do TP3 pede está implementado. Inclusão, busca com um e vários termos, alteração de palavras-chave, recusa de palavras-chave inválidas, arquivamento, listas com mais de um bloco e reabertura dos arquivos foram testados sem erros de execução. O escopo da pasta `TP3` está descrito na seção 7.
 
 > **O trabalho é original e não a cópia de um trabalho de outro grupo?**
 
-**Sim.** Desenvolvido de forma original e exclusiva pelos integrantes do grupo.
+**Sim.** Desenvolvido pelos integrantes do grupo, usando as classes fornecidas pelo professor na disciplina.

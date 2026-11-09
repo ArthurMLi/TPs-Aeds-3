@@ -12,7 +12,7 @@ import repository.CrudUsuario;
 public class MenuPerguntasPorPalavrasChaves {
 
     private static final int TAMANHO_PAGINA = 5;
-    private static final DateTimeFormatter FORMATO = DateTimeFormatter.ofPattern("dd/MM/yyyy 'às' HH:mm");
+    private static final DateTimeFormatter FORMATO = DateTimeFormatter.ofPattern("dd/MM/yyyy 'as' HH:mm");
 
     private final CrudPergunta crudPergunta;
     private final CrudUsuario crudUsuario;
@@ -84,7 +84,7 @@ public class MenuPerguntasPorPalavrasChaves {
         Usuario autor = crudUsuario.buscarPorId(pergunta.getIdUsuario());
         String nomeAutor = autor == null ? "Usuario desconhecido" : autor.getNome();
 
-        Console.cabecalho("Inicio > Buscar perguntas > Perguntas mais recentes > Pergunta");
+        Console.cabecalho("Inicio > Buscar perguntas > Perguntas por palavras chaves > Pergunta");
         Console.mensagem(pergunta.getPergunta());
         Console.mensagem("Criada por " + nomeAutor + " em " + formatarData(pergunta.getCriacao()));
         Console.mensagem("");
