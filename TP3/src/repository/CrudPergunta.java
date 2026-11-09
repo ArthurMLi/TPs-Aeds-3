@@ -3,7 +3,6 @@ package repository;
 import entities.Pergunta;
 import files.ArquivoPergunta;
 import files.ArquivoUsuario;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -86,7 +85,7 @@ public class CrudPergunta {
      * O caminho percorrido e: idUsuario -> arvore B+ -> lista de idPergunta ->
      * indice direto ID -> endereco -> registro no arquivo de dados.
      */
-    public Pergunta[] listar(int idUsuario) {
+    public Pergunta[] listarPorUsuario(int idUsuario) {
         try {
             Pergunta[] perguntas = arqPerguntas.readAllByUsuario(idUsuario);
             Arrays.sort(perguntas, Comparator.comparingLong(Pergunta::getCriacao));
@@ -95,9 +94,12 @@ public class CrudPergunta {
             return new Pergunta[0];
         }
     }
-
-    public Pergunta[] listarPorUsuario(int idUsuario) {
-        return listar(idUsuario);
+    public Pergunta[] listar() {
+        try {
+            return arqPerguntas.readAll().toArray(new Pergunta[0]);
+        } catch (Exception e) {
+            return new Pergunta[0];
+        }
     }
 
     public Pergunta[] listarMaisRecentes() {
@@ -108,9 +110,17 @@ public class CrudPergunta {
         }
     }
 
+    public Pergunta[] listarPorPalavrasChave(String consulta) {
+        try {
+            return arqPerguntas.readByKeywords(consulta);
+        } catch (Exception e) {
+            return new Pergunta[0];
+        }
+    }
+
     /** Apenas as perguntas ainda ativas (as arquivadas somem das listagens publicas). */
     public Pergunta[] listarAtivas(int idUsuario) {
-        Pergunta[] todas = listar(idUsuario);
+        Pergunta[] todas = listarPorUsuario(idUsuario);
         ArrayList<Pergunta> ativas = new ArrayList<>();
         for (Pergunta p : todas) {
             if (p.isAtiva()) {

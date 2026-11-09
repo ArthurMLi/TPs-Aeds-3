@@ -2,12 +2,11 @@ package view;
 
 import entities.Pergunta;
 import entities.Usuario;
-import repository.CrudPergunta;
-
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import repository.CrudPergunta;
 
 /**
  * Gestao das perguntas do usuario logado: listar, incluir, alterar e arquivar.
@@ -73,7 +72,7 @@ public class MenuPerguntas {
      * que o numero (i + 1) da tela corresponda a posicao i do vetor.
      */
     private Pergunta[] listar(Usuario usuario) {
-        Pergunta[] perguntas = crudPergunta.listar(usuario.getId());
+        Pergunta[] perguntas = crudPergunta.listarPorUsuario(usuario.getId());
 
         Console.mensagem("\nMINHAS PERGUNTAS");
         Console.mensagem("");

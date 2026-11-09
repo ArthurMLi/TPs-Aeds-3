@@ -2,15 +2,22 @@ package files;
 
 import aed3.Arquivo;
 import aed3.ArvoreBMais;
+import aed3.ElementoLista;
+import aed3.ListaInvertida;
 import aed3.ParDataId;
 import aed3.ParIdId;
 import entities.Pergunta;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import util.PalavrasChave;
 
 public class ArquivoPergunta extends Arquivo<Pergunta> {
 
     ArvoreBMais<ParIdId> relUsuarioPergunta;
     ArvoreBMais<ParDataId> relDataPergunta;
+    private final ListaInvertida indicePalavras;
 
     /**
      * Referencia opcional ao arquivo de usuarios, usada apenas para garantir a
@@ -29,6 +36,10 @@ public class ArquivoPergunta extends Arquivo<Pergunta> {
                 ParDataId.class.getConstructor(),
                 5,
                 "./dados/perguntas/relDataPergunta.db");
+        indicePalavras = new ListaInvertida(
+                5,
+                "./dados/perguntas/dicionarioPalavras.listainv.db",
+                "./dados/perguntas/blocosPalavras.listainv.db");
     }
 
     public void setArquivoUsuario(ArquivoUsuario arqUsuarios) {
@@ -49,10 +60,102 @@ public class ArquivoPergunta extends Arquivo<Pergunta> {
         if (arqUsuarios != null && arqUsuarios.read(pergunta.getIdUsuario()) == null) {
             throw new Exception("Usuario " + pergunta.getIdUsuario() + " nao existe.");
         }
+        if (PalavrasChave.tokens(pergunta.getPalavrasChave()).isEmpty()) {
+            throw new Exception("A pergunta precisa ter ao menos uma palavra-chave valida.");
+        }
         int id = super.create(pergunta);
         relUsuarioPergunta.create(new ParIdId(pergunta.getIdUsuario(), id));
         relDataPergunta.create(new ParDataId(pergunta.getCriacao(), id));
+        indexar(pergunta);
         return id;
+    }
+
+    private void indexar(Pergunta pergunta) throws Exception {
+        List<String> tokens = PalavrasChave.tokens(pergunta.getPalavrasChave());
+        if (tokens.isEmpty()) {
+            throw new Exception("A pergunta precisa ter ao menos uma palavra-chave valida.");
+        }
+        Map<String, Integer> frequencias = new HashMap<>();
+        for (String token : tokens) {
+            frequencias.put(token, frequencias.containsKey(token)
+                    ? frequencias.get(token) + 1 : 1);
+        }
+        for (Map.Entry<String, Integer> entrada : frequencias.entrySet()) {
+            float tf = (float) entrada.getValue() / tokens.size();
+            ElementoLista atual = buscarElemento(entrada.getKey(), pergunta.getId());
+            if (atual == null) {
+                indicePalavras.create(entrada.getKey(), new ElementoLista(pergunta.getId(), tf));
+            } else {
+                indicePalavras.update(entrada.getKey(),
+                        new ElementoLista(pergunta.getId(), atual.getFrequencia() + tf));
+            }
+        }
+        indicePalavras.incrementaEntidades();
+    }
+
+    private ElementoLista buscarElemento(String termo, int id) throws Exception {
+        for (ElementoLista elemento : indicePalavras.read(termo)) {
+            if (elemento.getId() == id) {
+                return elemento;
+            }
+        }
+        return null;
+    }
+
+    private void removerDoIndice(Pergunta pergunta) throws Exception {
+        for (String termo : PalavrasChave.tokens(pergunta.getPalavrasChave())) {
+            indicePalavras.delete(termo, pergunta.getId());
+        }
+        indicePalavras.decrementaEntidades();
+    }
+
+    public Pergunta[] readByKeywords(String consulta) throws Exception {
+        List<String> termos = PalavrasChave.tokens(consulta);
+        Map<Integer, Double> pontuacoes = new HashMap<>();
+        int entidades = indicePalavras.numeroEntidades();
+        if (entidades <= 0) {
+            return new Pergunta[0];
+        }
+        for (String termo : termos) {
+            ElementoLista[] elementos = indicePalavras.read(termo);
+            if (elementos.length == 0) {
+                continue;
+            }
+            double idf = Math.log10((double) entidades / elementos.length);
+            for (ElementoLista elemento : elementos) {
+                pontuacoes.put(elemento.getId(),
+                        pontuacoes.containsKey(elemento.getId())
+                                ? pontuacoes.get(elemento.getId()) + elemento.getFrequencia() * idf
+                                : elemento.getFrequencia() * idf);
+            }
+        }
+        ArrayList<PerguntaComPontuacao> resultados = new ArrayList<>();
+        for (Map.Entry<Integer, Double> entrada : pontuacoes.entrySet()) {
+            Pergunta pergunta = read(entrada.getKey());
+            if (pergunta != null && pergunta.isAtiva()) {
+                resultados.add(new PerguntaComPontuacao(pergunta, entrada.getValue()));
+            }
+        }
+        resultados.sort((a, b) -> {
+            int comparacao = Double.compare(b.pontuacao, a.pontuacao);
+            return comparacao != 0 ? comparacao
+                    : Integer.compare(a.pergunta.getId(), b.pergunta.getId());
+        });
+        Pergunta[] perguntas = new Pergunta[resultados.size()];
+        for (int i = 0; i < resultados.size(); i++) {
+            perguntas[i] = resultados.get(i).pergunta;
+        }
+        return perguntas;
+    }
+
+    private static class PerguntaComPontuacao {
+        private final Pergunta pergunta;
+        private final double pontuacao;
+
+        private PerguntaComPontuacao(Pergunta pergunta, double pontuacao) {
+            this.pergunta = pergunta;
+            this.pontuacao = pontuacao;
+        }
     }
 
     public Pergunta[] readAllByUsuario(int idUsuario) throws Exception {
@@ -109,9 +212,17 @@ public class ArquivoPergunta extends Arquivo<Pergunta> {
         if (atual.getIdUsuario() != pergunta.getIdUsuario()) {
             throw new Exception("O idUsuario de uma pergunta nao pode ser alterado.");
         }
+        Pergunta copiaAnterior = new Pergunta(atual.getId(), atual.getIdUsuario(),
+                atual.getCriacao(), atual.getAlteracao(), atual.getNota(),
+                atual.getPergunta(), atual.getPalavrasChave(), atual.isAtiva());
         pergunta.setCriacao(atual.getCriacao());
         pergunta.setAlteracao(System.currentTimeMillis());
-        return super.update(pergunta);
+        boolean atualizado = super.update(pergunta);
+        if (atualizado && pergunta.isAtiva()) {
+            removerDoIndice(copiaAnterior);
+            indexar(pergunta);
+        }
+        return atualizado;
     }
 
     public boolean arquivar(int id) throws Exception {
@@ -127,6 +238,9 @@ public class ArquivoPergunta extends Arquivo<Pergunta> {
     public boolean delete(int id) throws Exception {
         Pergunta pergunta = super.read(id);
         if (pergunta != null) {
+            if (pergunta.isAtiva()) {
+                removerDoIndice(pergunta);
+            }
             relUsuarioPergunta.delete(new ParIdId(pergunta.getIdUsuario(), id));
             relDataPergunta.delete(new ParDataId(pergunta.getCriacao(), id));
 
@@ -136,8 +250,7 @@ public class ArquivoPergunta extends Arquivo<Pergunta> {
     }
 
     public void deleteAllByUsuario(int idUsuario) throws Exception {
-        ArrayList<ParIdId> lista =
-            relUsuarioPergunta.read(new ParIdId(idUsuario, -1));
+        ArrayList<ParIdId> lista = relUsuarioPergunta.read(new ParIdId(idUsuario, -1));
 
         if (lista != null) {
             for (ParIdId parUsuario : lista) {
@@ -147,9 +260,11 @@ public class ArquivoPergunta extends Arquivo<Pergunta> {
                 Pergunta pergunta = super.read(idPergunta);
 
                 if (pergunta != null) {
+                    if (pergunta.isAtiva()) {
+                        removerDoIndice(pergunta);
+                    }
                     relDataPergunta.delete(
-                        new ParDataId(pergunta.getCriacao(), idPergunta)
-                    );
+                            new ParDataId(pergunta.getCriacao(), idPergunta));
 
                     super.delete(idPergunta);
                 }

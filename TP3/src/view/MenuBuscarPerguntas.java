@@ -8,11 +8,14 @@ public class MenuBuscarPerguntas {
 
     private final CrudUsuario crudUsuario;
     private final MenuPerguntasMaisRecentes menuPerguntasMaisRecentes;
+    private final MenuPerguntasPorPalavrasChaves menuPerguntasPorPalavrasChaves;
 
     public MenuBuscarPerguntas(CrudUsuario crudUsuario, CrudPergunta crudPergunta) {
         this.crudUsuario = crudUsuario;
         this.menuPerguntasMaisRecentes =
                 new MenuPerguntasMaisRecentes(crudUsuario, crudPergunta);
+        this.menuPerguntasPorPalavrasChaves =
+                new MenuPerguntasPorPalavrasChaves(crudUsuario, crudPergunta);
     }
 
     public void mostrar(Usuario usuario) {
@@ -31,8 +34,7 @@ public class MenuBuscarPerguntas {
                     menuPerguntasMaisRecentes.mostrar(usuario);
                     break;
                 case 'B':
-                    Console.erro("A busca por palavras-chave sera implementada no proximo trabalho pratico.");
-                    Console.pausar();
+                    menuPerguntasPorPalavrasChaves.mostrar(usuario);
                     break;
                 case 'R':
                     break;
