@@ -218,9 +218,15 @@ public class ArquivoPergunta extends Arquivo<Pergunta> {
         pergunta.setCriacao(atual.getCriacao());
         pergunta.setAlteracao(System.currentTimeMillis());
         boolean atualizado = super.update(pergunta);
-        if (atualizado && pergunta.isAtiva()) {
-            removerDoIndice(copiaAnterior);
-            indexar(pergunta);
+        if (atualizado) {
+            if (atual.isAtiva() && pergunta.isAtiva()) {
+                removerDoIndice(copiaAnterior);
+                indexar(pergunta);
+            } else if (atual.isAtiva()) {
+                removerDoIndice(copiaAnterior);
+            } else if (pergunta.isAtiva()) {
+                indexar(pergunta);
+            }
         }
         return atualizado;
     }
