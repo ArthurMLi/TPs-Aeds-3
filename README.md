@@ -8,7 +8,7 @@
 
 Prof. Marcos André S. Kutova · 2º semestre de 2026
 
-**Vídeo de demonstração:** _link a adicionar_
+**Vídeo de demonstração:** https://youtu.be/I5hDuucS-hs
 
 </div>
 
